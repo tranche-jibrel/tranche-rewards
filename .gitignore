@@ -1,0 +1,7 @@
+flatten/
+FDT/
+build/
+other/
+*.txt
+compound/
+node_modules
