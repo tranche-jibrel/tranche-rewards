@@ -481,30 +481,30 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
     }
 
     /**
-     * @notice Claim all the comp accrued by holder in all markets
+     * @notice Claim all the slice accrued by holder in all markets
      * @param holder The address to claim Slice for
      */
-    function claimComp(address holder) public {
-        return claimComp(holder, allMarkets);
+    function claimSlice(address holder) public {
+        return claimSlice(holder, allMarkets);
     }
 
     /**
-     * @notice Claim all the comp accrued by holder in the specified markets
+     * @notice Claim all the slice accrued by holder in the specified markets
      * @param holder The address to claim Slice for
      * @param sTokens The list of markets to claim Slice in
      */
-    function claimComp(address holder, TrancheToken[] memory sTokens) public {
+    function claimSlice(address holder, TrancheToken[] memory sTokens) public {
         address[] memory holders = new address[](1);
         holders[0] = holder;
-        claimComp(holders, sTokens);
+        claimSlice(holders, sTokens);
     }
 
     /**
-     * @notice Claim all comp accrued by the holders
+     * @notice Claim all slice accrued by the holders
      * @param holders The addresses to claim Slice for
      * @param sTokens The list of markets to claim Slice in
      */
-    function claimComp(address[] memory holders, TrancheToken[] memory sTokens) public {
+    function claimSlice(address[] memory holders, TrancheToken[] memory sTokens) public {
         for (uint i = 0; i < sTokens.length; i++) {
             TrancheToken trToken = sTokens[i];
             require(markets[address(trToken)].isListed, "market must be listed");
