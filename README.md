@@ -5,17 +5,11 @@
 Data: 
 
     totalTVL = total value locked (TVL) inside tranche A & B
-
     extProtRet = external protocol return
-
     trARet = tranche A return
-
     trATVL = tranche A TVL
-
     trBTVL = tranche B TVL
-
     balFactor = slice balance factor between tranche A & B (50% means the same amount of slice tokens per tranche when tranches have the same return) 
-    
     dailySliceAmount = amount of slice tokens per day
 
 
