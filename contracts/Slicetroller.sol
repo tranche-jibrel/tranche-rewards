@@ -156,6 +156,16 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
         return uint(Error.NO_ERROR);
     }
 */
+
+
+    // (((extProtRet-(totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL)/extProtRet)+balFactor)*dailySliceAmount
+    // (totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL = trancheBReturn
+    // extProtRet-(trancheBReturn) = DeltaAPY
+    // DeltaAPY / extProtRet = DeltaAPYPercentage
+    // DeltaAPYPercentage + balanceFactor = trBPercentage
+    // trBPercentage * dailySliceAmount = trBSliceRewards
+    // dailySliceAmount - trBSliceRewards = trASliceRewards
+
     /**
      * @dev get all markets total value locked
      * @return allMarketTVL total value locked
@@ -234,8 +244,11 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
             uint256 _trNum, 
             address _trToken, 
             bool _isTrancheA,
-            bool _refreshAuto) public {
+            bool _refreshAuto,
+            uint256 _unbalPercent,
+            uint256 _extProtReturn) public {
         require(adminOrInitializing(), "only admin can add slice market");
+        require(_unbalPercent < 10000, "check unbalanced percentage");
         Market storage market = markets[_trToken];
         IProtocol protocol = IProtocol(_protocol);
         address token;
@@ -251,6 +264,11 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
         market.isSliced = true;
         market.isListed = true;
         market.isTrancheA = _isTrancheA;
+        if(_isTrancheA)
+            market.balanceFactor = PERCENT_DIVIDER.sub(_unbalPercent);
+        else
+            market.balanceFactor = _unbalPercent;
+        market.externalProtocolReturn = _extProtReturn;
         allMarkets.push(TrancheToken(_trToken));
         //emit MarketComped(ITrancheToken(_trToken), true);
 
@@ -263,6 +281,11 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
 
         if (_refreshAuto)
             refreshSliceSpeedsInternal();
+    }
+
+    function setExternalProtocolReturn(address _trToken, uint256 _extProtReturn) external {
+        require(markets[_trToken].isListed == true, "slice market is not listed");
+        markets[_trToken].externalProtocolReturn = _extProtReturn;
     }
 
     /**
@@ -312,33 +335,7 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
             //Exp memory borrowIndex = Exp({mantissa: trToken.borrowIndex()});
             updateSliceIndex(address(trToken));
         }
-/*
-        Exp memory totalUtility = Exp({mantissa: 0});
-        Exp[] memory utilities = new Exp[](allMarkets_.length);
-        for (uint i = 0; i < allMarkets_.length; i++) {
-            ITrancheToken trToken = allMarkets_[i];
-            if (markets[address(trToken)].isSliced) {
-                IProtocol protocol = IProtocol(markets[address(trToken)].protocol);
-                Exp memory assetPrice;
-                if (markets[address(trToken)].isTrancheA)
-                    assetPrice = Exp({mantissa: protocol.getTrancheAExchangeRate(markets[address(trToken)].protocolTrNumber)});
-                else
-                    assetPrice = Exp({mantissa: protocol.getTrancheBExchangeRate(markets[address(trToken)].protocolTrNumber, 0)});
 
-                //Exp memory utility = mul_(assetPrice, trToken.totalBorrows());
-                Exp memory utility = mul_(assetPrice, 1);
-                utilities[i] = utility;
-                totalUtility = add_(totalUtility, utility);
-            }
-        }
-
-        for (uint i = 0; i < allMarkets_.length; i++) {
-            ITrancheToken trToken = allMarkets[i];
-            uint newSpeed = totalUtility.mantissa > 0 ? mul_(sliceRate, div_(utilities[i], totalUtility)) : 0;
-            sliceSpeeds[address(trToken)] = newSpeed;
-            //emit SliceSpeedUpdated(trToken, newSpeed);
-        }
-*/
         uint256 allMarketsTVL = getAllMarketsTVL();
         uint256 singleMarketTVL;
         for (uint i = 0; i < allMarkets_.length; i++) {

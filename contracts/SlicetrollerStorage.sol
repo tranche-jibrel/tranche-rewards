@@ -11,7 +11,8 @@ import "./TrancheToken.sol";
 
 contract SlicetrollerStorage is OwnableUpgradeable {
 
-    uint constant doubleScale = 1e36;
+    uint256 public constant doubleScale = 1e36;
+    uint256 public constant PERCENT_DIVIDER = 10000;  // percentage divider
 
     struct Market {
         // protocol address
@@ -27,10 +28,16 @@ contract SlicetrollerStorage is OwnableUpgradeable {
         bool isListed;
 
         // Per-market mapping of "accounts in this asset"
-        mapping(address => bool) accountMembership;
+        //mapping(address => bool) accountMembership;
 
         // Whether or not this market receives Slice
         bool isSliced;
+
+        // external protocol return
+        uint256 externalProtocolReturn;
+
+        // unbalance percentage of tranche B respect to tranche A when tranche B = external protocol percentage
+        uint256 balanceFactor;  // 5500 means 55% for tranche B and 45% for tranche A
     }
 
     struct SliceMarketState {
@@ -78,7 +85,7 @@ contract SlicetrollerStorage is OwnableUpgradeable {
     mapping(address => uint256) public lastContributorBlock;
 
     // The initial Slice index for a market
-    uint224 public constant sliceInitialIndex = 1e36;
+    uint224 public constant sliceInitialIndex = 1e18;
 
     // The threshold above which the flywheel transfers Slice, in wei
     uint256 public constant sliceClaimThreshold = 0.001e18;

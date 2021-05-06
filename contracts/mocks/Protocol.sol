@@ -14,6 +14,8 @@ contract Protocol is IProtocol {
         uint256 trAValue;
         uint256 trBValue;
         uint256 totalTrValue;
+        uint256 trancheACurrentRPB;
+        uint256 extProtRPB;
     }
 
     struct TrancheAddresses {
@@ -31,12 +33,16 @@ contract Protocol is IProtocol {
     function createTranche(address _trA,
             address _trB,
             uint256 _trAVal,
-            uint256 _trBVal) external {
+            uint256 _trBVal,
+            uint256 _trARBP,
+            uint256 _extRPB) external {
         trancheAddresses[trCounter].ATrancheAddress = _trA;
         trancheAddresses[trCounter].BTrancheAddress = _trB;
         tranchesMocks[trCounter].trAValue = _trAVal;
         tranchesMocks[trCounter].trBValue = _trBVal;
         tranchesMocks[trCounter].totalTrValue = _trAVal + _trBVal;
+        tranchesMocks[trCounter].trancheACurrentRPB = _trARBP;
+        tranchesMocks[trCounter].extProtRPB = _extRPB;
         trCounter = trCounter + 1;
     }
 
@@ -70,5 +76,22 @@ contract Protocol is IProtocol {
 
     function getTrancheAExchangeRate(uint256 _trancheNum) external view override returns (uint256) {}
     function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) external view override returns (uint256){}
+
+    function setExtProtRPB(uint256 _trancheNum, uint256 _newRPB) external {
+        tranchesMocks[_trancheNum].extProtRPB = _newRPB;
+    }
+
+    function getExtProtRPB(uint256 _trancheNum) external view override returns (uint256) {
+        return tranchesMocks[_trancheNum].extProtRPB;
+    }
+
+    function setTrancheACurrentRPB(uint256 _trancheNum, uint256 _newRPB) external {
+        tranchesMocks[_trancheNum].trancheACurrentRPB = _newRPB;
+    }
+
+    function getTrancheACurrentRPB(uint256 _trancheNum) external view override returns (uint256) {
+        return tranchesMocks[_trancheNum].trancheACurrentRPB;
+    }
+
 
 }
