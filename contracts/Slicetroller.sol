@@ -7,13 +7,12 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-//import "./math/ExponentialNoError.sol";
 import "./interfaces/ISlice.sol";
 import "./interfaces/IProtocol.sol";
 import "./math/SafeMathInt.sol";
 import "./SlicetrollerStorage.sol";
 
-contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoError*/ {
+contract Slicetroller is Initializable, SlicetrollerStorage {
     using SafeMath for uint256;
     using SafeMathInt for int256;
 

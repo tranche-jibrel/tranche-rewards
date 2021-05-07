@@ -41,8 +41,9 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
       uint256 _protocolTrNumber,
       address _aMarketAddress, 
       address _bMarketAddress, 
-      uint256 _aSharePercentage,
-      uint256 _tranchePercentage) public {
+      uint256 _balFactor,
+      uint256 _tranchePercentage,
+      uint256 _extProtReturn) public {
     availableMarkets[marketsCounter].protocol = _protocol;
     availableMarkets[marketsCounter].protocolTrNumber = _protocolTrNumber;
     //availableMarkets[marketsCounter].aTranche = IProtocol(_protocol).trancheAddresses[_protocolTrNumber].ATrancheAddress;
@@ -51,11 +52,12 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
     //availableMarkets[marketsCounter].aTranche = IProtocol(_protocol).trancheAddresses[_protocolTrNumber].BTrancheAddress;
     availableMarkets[marketsCounter].bTranche = _bMarketAddress;
     //_addTokenInternal(availableMarkets[marketsCounter].bTranche);
-    availableMarkets[marketsCounter].aSharesPercentage = _aSharePercentage;
+    availableMarkets[marketsCounter].balanceFactor = _balFactor;
     availableMarkets[marketsCounter].updateBlock = block.number;
     availableMarkets[marketsCounter].enabled = true;
     availableMarkets[marketsCounter].trancheRewardsPercentage = _tranchePercentage;  //5000 --> 50% (divider = 10000)
-    availableMarkets[marketsCounter].deadlineBlock = 0;
+    //availableMarkets[marketsCounter].deadlineBlock = 0;
+    availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;
     marketsCounter = marketsCounter.add(1);
   }
 
@@ -114,6 +116,13 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
     return trancheBTVL;
   }
 
+  function getTrancheMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheTVL) {
+    uint256 trATVL = getTrancheAMarketTVL(_idxMarket);
+    uint256 trBTVL = getTrancheBMarketTVL(_idxMarket);
+    trancheTVL = trATVL.add(trBTVL);
+    return trancheTVL;
+  }
+
   //marketShare = getTrancheValue / sumAllMarketsValueLocked
   function getMarketSharePerTranche(uint256 _idxMarket) public returns(uint256 marketShare) {
     uint256 totalValue = getAllMarketsTVL();
@@ -125,18 +134,7 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
       marketShare = 0;
     return marketShare;
   }
-/*
-  function getMarketRatePerTranche(uint256 _idxMarket) public returns(uint256 marketRate) {
-    uint256 trancheMarketShare = getMarketSharePerTranche(_idxMarket);
 
-    if (trancheMarketShare > 0) {
-      uint256 sliceAmount = getTotalReward();
-      marketRate = sliceAmount.mul(1e18).div(trancheMarketShare);
-    } else 
-      marketRate = 0;
-    return marketRate;
-  }
-*/
   function getTrATotalSupply(uint256 _idxMarket) public view returns(uint256 totalBalance) {
     return IERC20Upgradeable(availableMarkets[_idxMarket].aTranche).totalSupply();
   }
@@ -176,10 +174,10 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
       if (availableMarkets[i].enabled) {
         //uint256 trAmount = _amount.mul(getMarketSharePerTranche(i));
         uint256 trRewardsAmount = _amount.mul(availableMarkets[i].trancheRewardsPercentage).div(PERCENT_DIVIDER);
-        availableMarkets[i].trancheARewardsAmount = trRewardsAmount.mul(availableMarkets[i].aSharesPercentage).div(PERCENT_DIVIDER);
-        availableMarkets[i].trancheBRewardsAmount = trRewardsAmount.sub(availableMarkets[i].trancheARewardsAmount);
+        availableMarkets[i].trancheBRewardsAmount = trRewardsAmount.mul(availableMarkets[i].balanceFactor).div(PERCENT_DIVIDER);
+        availableMarkets[i].trancheARewardsAmount = trRewardsAmount.sub(availableMarkets[i].trancheARewardsAmount);
         availableMarkets[i].updateBlock = block.number;
-        availableMarkets[i].deadlineBlock = block.number.add(_duration);
+        //availableMarkets[i].deadlineBlock = block.number.add(_duration);
       }
 		}
 	}
@@ -190,10 +188,10 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
     require(marketsCounter > _idxMarket, "TokenRewards: no markets");
     require(availableMarkets[_idxMarket].enabled, "TokenRewards: market disabled");
     SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardToken), msg.sender, address(this), _amount);
-    availableMarkets[_idxMarket].trancheARewardsAmount = _amount.mul(availableMarkets[_idxMarket].aSharesPercentage).div(PERCENT_DIVIDER);
-    availableMarkets[_idxMarket].trancheBRewardsAmount = _amount.sub(availableMarkets[_idxMarket].trancheARewardsAmount);
+    availableMarkets[_idxMarket].trancheBRewardsAmount = _amount.mul(availableMarkets[_idxMarket].balanceFactor).div(PERCENT_DIVIDER);
+    availableMarkets[_idxMarket].trancheARewardsAmount = _amount.sub(availableMarkets[_idxMarket].trancheARewardsAmount);
     availableMarkets[_idxMarket].updateBlock = block.number;
-    availableMarkets[_idxMarket].deadlineBlock = block.number.add(_duration);
+    //availableMarkets[_idxMarket].deadlineBlock = block.number.add(_duration);
 	}
 
   /**
@@ -266,6 +264,45 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
 		}
 	}
 
+  function getTrancheAReturns(uint256 _idxMarket) public view returns (uint256 trAReturns) {
+    require(availableMarkets[_idxMarket].enabled, "Market not enabled");
+    address _protocol = availableMarkets[_idxMarket].protocol;
+    uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
+    uint256 trancheARPB = IProtocol(_protocol).getTrancheACurrentRPB(_trNum);
+    uint256 totBlksYear = IProtocol(_protocol).totalBlocksPerYear();
+    uint256 trAPrice = IProtocol(_protocol).getTrancheAExchangeRate(_trNum);
+    // calc percentage
+    // trA APY = trARPB * 2102400 / trAPrice
+    trAReturns = trancheARPB.mul(totBlksYear).mul(1e18).div(trAPrice);  //check decimals!!!
+    return trAReturns;
+  }
+
+    function getTrancheBReturns(uint256 _idxMarket) public view returns (uint trBReturns) {
+      require(availableMarkets[_idxMarket].enabled, "Market not enabled");
+      uint256 trAReturns = getTrancheAReturns(_idxMarket);
+      uint256 trARetPercent = trAReturns.add(1e18); //(1+trARet)
+      uint256 totTrancheTVL = getTrancheMarketTVL(_idxMarket);
+      uint256 trATVL = getTrancheAMarketTVL(_idxMarket);
+      uint256 trBTVL = totTrancheTVL.sub(trATVL);
+      uint256 totRetPercent = (availableMarkets[_idxMarket].extProtocolPercentage).add(1e18); //(1+extProtRet)
+
+      uint256 extFutureValue = totTrancheTVL.mul(totRetPercent).div(1e18); // totalTVL*(1+extProtRet)
+      uint256 trAFutureValue = trATVL.mul(trARetPercent).div(1e18); // trATVL*(1+trARet)
+      // (totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL
+      trBReturns = (extFutureValue.sub(trAFutureValue).sub(trBTVL)).mul(1e18).div(trBTVL);  //check decimals!!!
+      return trBReturns;
+    }
+
+    function getTrancheBRewardsPercentage(uint256 _idxMarket) public view returns (int256 trBRewardsPercentage) {
+      require(availableMarkets[_idxMarket].enabled, "Market not enabled");
+      int256 trBReturns = int256(getTrancheBReturns(_idxMarket));
+      int256 extProtRet = int256(availableMarkets[_idxMarket].extProtocolPercentage);
+      int256 deltaAPY = (extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
+      int256 deltaAPYPercentage = deltaAPY.div(extProtRet); // DeltaAPY / extProtRet = DeltaAPYPercentage
+      trBRewardsPercentage = deltaAPYPercentage.add(int256(availableMarkets[_idxMarket].balanceFactor)); // DeltaAPYPercentage + balanceFactor = trBPercentage
+      return trBRewardsPercentage;
+    }
+
   /** 
 	 * prev. distributeDividends
 	 * @notice Distributes funds to token holders.
@@ -325,7 +362,7 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
 	 */
 	function withdrawableSingleMarketFundsOf(uint256 _idxMarket, address _user) public view returns(uint256) {
     uint256 trancheAPart = accumulativeFundsOfSingleMarketTrA(_idxMarket, _user);
-    uint256 trancheBPart = accumulativeFundsOfSingleMarketTrA(_idxMarket, _user);
+    uint256 trancheBPart = accumulativeFundsOfSingleMarketTrB(_idxMarket, _user);
 		return trancheAPart.add(trancheBPart).sub(withdrawnFunds[_user]);
 	}
 
@@ -333,7 +370,7 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
     uint256 totalWithdrawable;
     for(uint256 i = 0; i < marketsCounter; i++) {
       uint256 trancheAPart = accumulativeFundsOfSingleMarketTrA(i, _user);
-      uint256 trancheBPart = accumulativeFundsOfSingleMarketTrA(i, _user);
+      uint256 trancheBPart = accumulativeFundsOfSingleMarketTrB(i, _user);
       totalWithdrawable = totalWithdrawable.add(trancheAPart).add(trancheBPart);
     }
 		return totalWithdrawable.sub(withdrawnFunds[_user]);

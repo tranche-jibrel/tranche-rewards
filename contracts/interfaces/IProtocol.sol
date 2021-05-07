@@ -13,7 +13,7 @@ interface IProtocol {
     function getTrancheAExchangeRate(uint256 _trancheNum) external view returns (uint256);
     function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) external view returns (uint256);
     function trancheAddresses(uint256 _trNum) external view returns (address, address, address, address);
-    function getExtProtRPB(uint256 _trancheNum) external view returns (uint256);
+    //function getExtProtRPB(uint256 _trancheNum) external view returns (uint256);
     function getTrancheACurrentRPB(uint256 _trancheNum) external view returns (uint256);
     function totalBlocksPerYear() external view returns (uint256);
 }
