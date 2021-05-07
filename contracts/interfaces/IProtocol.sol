@@ -15,4 +15,5 @@ interface IProtocol {
     function trancheAddresses(uint256 _trNum) external view returns (address, address, address, address);
     function getExtProtRPB(uint256 _trancheNum) external view returns (uint256);
     function getTrancheACurrentRPB(uint256 _trancheNum) external view returns (uint256);
+    function totalBlocksPerYear() external view returns (uint256);
 }

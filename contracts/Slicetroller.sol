@@ -10,10 +10,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 //import "./math/ExponentialNoError.sol";
 import "./interfaces/ISlice.sol";
 import "./interfaces/IProtocol.sol";
+import "./math/SafeMathInt.sol";
 import "./SlicetrollerStorage.sol";
 
 contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoError*/ {
     using SafeMath for uint256;
+    using SafeMathInt for int256;
 
     function initialize (address _token) public initializer() {
         OwnableUpgradeable.__Ownable_init();
@@ -185,8 +187,19 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
         return allMarketTVL;
     }
 
+    function getTranchesTVL(address _trA, address _trB) public view returns(uint256 tranchesTVL) {
+        address _trAProtocol = markets[_trA].protocol;
+        address _trBProtocol = markets[_trB].protocol;
+        require(_trAProtocol == _trBProtocol, "not the same protocol");
+        uint256 _trANum = markets[_trA].protocolTrNumber;
+        uint256 _trBNum = markets[_trB].protocolTrNumber;
+        require(_trANum == _trBNum, "not the same tranches");
+        tranchesTVL = IProtocol(_trAProtocol).getTotalValue(_trANum);
+        return tranchesTVL;
+    }
+
     /**
-     * @dev get total value locked in tranche A
+     * @dev get total value locked in tranche A token
      * @param _trToken tranche A token address
      * @return trancheATVL total value locked by tranche A
      */
@@ -199,8 +212,60 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
         return trancheATVL;
     }
 
+    function getTrancheAReturns(address _trToken) public view returns (uint trAReturns) {
+        require(markets[_trToken].isTrancheA, "token is not a trancheA token");
+        if (markets[_trToken].isSliced) {
+            address _protocol = markets[_trToken].protocol;
+            uint256 _trNum = markets[_trToken].protocolTrNumber;
+            uint256 trancheARPB = IProtocol(_protocol).getTrancheACurrentRPB(_trNum);
+            uint256 totBlksYear = IProtocol(_protocol).totalBlocksPerYear();
+            uint256 trAPrice = IProtocol(_protocol).getTrancheAExchangeRate(_trNum);
+            // calc percentage
+            // trA APY = trARPB * 2102400 / trAPrice
+            // trB APY = ( compoundAPY * trBSupply + trASupply * (compoundAPY - trA APY)  ) / trBSupply
+            // with compound APY = supplyRatePerBlock * (10 ^18) / 2102400
+            trAReturns = trancheARPB.mul(totBlksYear).mul(1e18).div(trAPrice);  //check decimals!!!
+        }
+        return trAReturns;
+    }
+
+    function getTrancheBReturns(address _trToken) public view returns (uint trBReturns) {
+        require(!markets[_trToken].isTrancheA, "token is not a trancheB token");
+        if (markets[_trToken].isSliced) {
+            address _protocol = markets[_trToken].protocol;
+            uint256 _trNum = markets[_trToken].protocolTrNumber;
+            address tokenTrA;
+            ( , , tokenTrA, ) = IProtocol(_protocol).trancheAddresses(_trNum);
+            if(markets[tokenTrA].isListed) {
+                uint256 trAReturns = getTrancheAReturns(tokenTrA);
+                uint256 trARetPercent = trAReturns.add(1e18); //(1+trARet)
+                uint256 totTrancheTVL = getTranchesTVL(tokenTrA, _trToken);
+                uint256 trATVL = getTrancheAMarketTVL(tokenTrA);
+                uint256 trBTVL = totTrancheTVL.sub(trATVL);
+                uint256 totRetPercent = (markets[_trToken].externalProtocolReturn).add(1e18); //(1+extProtRet)
+
+                uint256 extFutureValue = totTrancheTVL.mul(totRetPercent).div(1e18); // totalTVL*(1+extProtRet)
+                uint256 trAFutureValue = trATVL.mul(trARetPercent).div(1e18); // trATVL*(1+trARet)
+                // (totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL
+                trBReturns = (extFutureValue.sub(trAFutureValue).sub(trBTVL)).mul(1e18).div(trBTVL);  //check decimals!!!
+            } else 
+                trBReturns = 0;
+        }
+        return trBReturns;
+    }
+
+    function getTrancheBRewardsPercentage(address _trToken) public view returns (int256 trBRewardsPercentage) {
+        require(!markets[_trToken].isTrancheA, "token is not a trancheB token");
+        int256 trBReturns = int256(getTrancheBReturns(_trToken));
+        int256 extProtRet = int256(markets[_trToken].externalProtocolReturn);
+        int256 deltaAPY = (extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
+        int256 deltaAPYPercentage = deltaAPY.div(extProtRet); // DeltaAPY / extProtRet = DeltaAPYPercentage
+        trBRewardsPercentage = deltaAPYPercentage.add(int256(markets[_trToken].balanceFactor)); // DeltaAPYPercentage + balanceFactor = trBPercentage
+        return trBRewardsPercentage;
+    }
+
     /**
-     * @dev get total value locked in tranche B
+     * @dev get total value locked in tranche B token
      * @param _trToken tranche B token address
      * @return trancheBTVL total value locked by tranche B
      */
@@ -237,18 +302,23 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
 
     /**
      * @notice Add markets to sliceMarkets, allowing them to earn Slice in the flywheel
+     * @param _protocol protocol address
+     * @param _trNum protocol tranche number 
      * @param _trToken The addresses of the markets to add
      * @param _isTrancheA wether is tranche A token or not
+     * @param _refreshAuto wether automatically refresh slice speed or not
+     * @param _balFactor balance factor (SIR)
+     * @param _extProtReturn external protocol return
      */
     function _addSliceMarket(address _protocol, 
             uint256 _trNum, 
             address _trToken, 
             bool _isTrancheA,
             bool _refreshAuto,
-            uint256 _unbalPercent,
-            uint256 _extProtReturn) public {
+            uint256 _balFactor,
+            uint256 _extProtReturn) public onlyOwner {
         require(adminOrInitializing(), "only admin can add slice market");
-        require(_unbalPercent < 10000, "check unbalanced percentage");
+        require(_balFactor < 10000, "check unbalanced percentage");
         Market storage market = markets[_trToken];
         IProtocol protocol = IProtocol(_protocol);
         address token;
@@ -265,9 +335,9 @@ contract Slicetroller is Initializable, SlicetrollerStorage/*, ExponentialNoErro
         market.isListed = true;
         market.isTrancheA = _isTrancheA;
         if(_isTrancheA)
-            market.balanceFactor = PERCENT_DIVIDER.sub(_unbalPercent);
+            market.balanceFactor = PERCENT_DIVIDER.sub(_balFactor);
         else
-            market.balanceFactor = _unbalPercent;
+            market.balanceFactor = _balFactor;
         market.externalProtocolReturn = _extProtReturn;
         allMarkets.push(TrancheToken(_trToken));
         //emit MarketComped(ITrancheToken(_trToken), true);

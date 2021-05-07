@@ -15,6 +15,7 @@ contract Protocol is IProtocol {
         uint256 trBValue;
         uint256 totalTrValue;
         uint256 trancheACurrentRPB;
+        uint256 storedTrancheAPrice;
         uint256 extProtRPB;
     }
 
@@ -29,6 +30,11 @@ contract Protocol is IProtocol {
     mapping(uint256 => Tranche) public tranchesMocks;
 
     uint256 public trCounter;
+    uint256 public override totalBlocksPerYear;
+
+    constructor() {
+        totalBlocksPerYear = 2102400; // same number like in Compound protocol
+    }
 
     function createTranche(address _trA,
             address _trB,
@@ -73,8 +79,7 @@ contract Protocol is IProtocol {
     function getTotalValue(uint256 _trancheNum) external view override returns (uint256){
         return tranchesMocks[_trancheNum].totalTrValue;
     }
-
-    function getTrancheAExchangeRate(uint256 _trancheNum) external view override returns (uint256) {}
+    
     function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) external view override returns (uint256){}
 
     function setExtProtRPB(uint256 _trancheNum, uint256 _newRPB) external {
@@ -93,5 +98,12 @@ contract Protocol is IProtocol {
         return tranchesMocks[_trancheNum].trancheACurrentRPB;
     }
 
+    function setTrancheAExchangeRate(uint256 _trancheNum, uint256 _trancheAPrice) public {
+        tranchesMocks[_trancheNum].storedTrancheAPrice = _trancheAPrice;
+    }
+
+    function getTrancheAExchangeRate(uint256 _trancheNum) public view override returns (uint256) {
+        return tranchesMocks[_trancheNum].storedTrancheAPrice;
+    }
 
 }
