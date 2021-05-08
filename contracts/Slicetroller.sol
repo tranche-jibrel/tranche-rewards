@@ -7,7 +7,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./interfaces/ISlice.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./interfaces/IProtocol.sol";
 import "./math/SafeMathInt.sol";
 import "./SlicetrollerStorage.sol";
@@ -456,7 +456,7 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
      */
     function transferSlice(address user, uint userAccrued, uint threshold) internal returns (uint) {
         if (userAccrued >= threshold && userAccrued > 0) {
-            ISlice slice = ISlice(getSliceAddress());
+            IERC20Upgradeable slice = IERC20Upgradeable(getSliceAddress());
             uint sliceRemaining = slice.balanceOf(address(this));
             if (userAccrued <= sliceRemaining) {
                 slice.transfer(user, userAccrued);
@@ -511,7 +511,7 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
      * @return The amount of Slice which was NOT transferred to the user
      */
     function grantSliceInternal(address user, uint amount) internal returns (uint) {
-        ISlice slice = ISlice(getSliceAddress());
+        IERC20Upgradeable slice = IERC20Upgradeable(getSliceAddress());
         uint sliceRemaining = slice.balanceOf(address(this));
         if (amount > 0 && amount <= sliceRemaining) {
             slice.transfer(user, amount);

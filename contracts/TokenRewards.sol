@@ -165,9 +165,9 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
     return userRate;
   }
 
-  function distributeAllMarketsFunds(uint256 _amount, uint256 _duration) external onlyOwner {
+  function distributeAllMarketsFunds(uint256 _amount/*, uint256 _duration*/) external onlyOwner {
 		require(_amount > 0, "TokenRewards: no tokens");
-    require(_duration > 0, "TokenRewards: no duration");
+    //require(_duration > 0, "TokenRewards: no duration");
     require(marketsCounter > 0, "TokenRewards: no markets");
     SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardToken), msg.sender, address(this), _amount);
     for(uint256 i = 0; i < marketsCounter; i++) {
@@ -182,9 +182,9 @@ contract TokenRewards is OwnableUpgradeable, TokenRewardsStorage, ITokenRewards 
 		}
 	}
 
-  function distributeSingleMarketsFunds(uint256 _idxMarket, uint256 _amount, uint256 _duration) external onlyOwner {
+  function distributeSingleMarketsFunds(uint256 _idxMarket, uint256 _amount/*, uint256 _duration*/) external onlyOwner {
 		require(_amount > 0, "TokenRewards: no tokens");
-    require(_duration > 0, "TokenRewards: no duration");
+    //require(_duration > 0, "TokenRewards: no duration");
     require(marketsCounter > _idxMarket, "TokenRewards: no markets");
     require(availableMarkets[_idxMarket].enabled, "TokenRewards: market disabled");
     SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardToken), msg.sender, address(this), _amount);

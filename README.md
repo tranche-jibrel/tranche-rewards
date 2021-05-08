@@ -41,7 +41,7 @@ All in one formula:
 
     (((extProtRet-(totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL)/extProtRet)+balFactor)*dailySliceAmount
 
-    ## Contracts Size (main contracts, no interfaces, no test contracts)
+## Contracts Size (main contracts, no interfaces, no test contracts)
 Limit is 24 KiB for single contract
 <table>
     <thead>
@@ -53,19 +53,19 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>Slicetroller</td>
-            <td><code>22.09 KiB</code></td>
+            <td><code>12.10 KiB</code></td>
         </tr>
         <tr>
             <td>SlicetrollerStorage</td>
-            <td><code>3.38 KiB</code></td>
+            <td><code>1.82 KiB</code></td>
         </tr>
         <tr>
             <td>TokenRewards</td>
-            <td><code>18.27 KiB</code></td>
+            <td><code>9.96 KiB</code></td>
         </tr>
         <tr>
             <td>TokenRewardsStorage</td>
-            <td><code>2.44 KiB</code></td>
+            <td><code>1.27 KiB</code></td>
         </tr>
     </tbody>
   </table>
