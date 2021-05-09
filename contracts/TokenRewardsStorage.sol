@@ -17,7 +17,7 @@ contract TokenRewardsStorage is OwnableUpgradeable {
         address aTranche;
         address bTranche;
         uint256 protocolTrNumber;
-        uint256 balanceFactor;
+        uint256 balanceFactor;  // scaled by 1e18
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;
         uint256 updateBlock;

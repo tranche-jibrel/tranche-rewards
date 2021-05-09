@@ -36,8 +36,8 @@ contract SlicetrollerStorage is OwnableUpgradeable {
         // external protocol return
         uint256 externalProtocolReturn;
 
-        // unbalance percentage of tranche B respect to tranche A when tranche B = external protocol percentage
-        uint256 balanceFactor;  // 5500 means 55% for tranche B and 45% for tranche A
+        // unbalance percentage of tranche B respect to tranche A when tranche B = external protocol percentage (scaled by 1e18)
+        uint256 balanceFactor;  // 550000000000000000 means 55% for tranche B and 45% for tranche A
     }
 
     struct SliceMarketState {

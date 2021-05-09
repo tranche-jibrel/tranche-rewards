@@ -260,6 +260,10 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
         int256 deltaAPY = (extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
         int256 deltaAPYPercentage = deltaAPY.div(extProtRet); // DeltaAPY / extProtRet = DeltaAPYPercentage
         trBRewardsPercentage = deltaAPYPercentage.add(int256(markets[_trToken].balanceFactor)); // DeltaAPYPercentage + balanceFactor = trBPercentage
+        if (trBRewardsPercentage < 0 )
+            trBRewardsPercentage = 0;
+        else if (trBRewardsPercentage < 1e18)
+            trBRewardsPercentage = 1e18;
         return trBRewardsPercentage;
     }
 
@@ -334,7 +338,7 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
         market.isListed = true;
         market.isTrancheA = _isTrancheA;
         if(_isTrancheA)
-            market.balanceFactor = PERCENT_DIVIDER.sub(_balFactor);
+            market.balanceFactor = uint256(1e18).sub(_balFactor);
         else
             market.balanceFactor = _balFactor;
         market.externalProtocolReturn = _extProtReturn;

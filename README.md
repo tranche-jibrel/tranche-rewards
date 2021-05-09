@@ -53,7 +53,7 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>Slicetroller</td>
-            <td><code>12.10 KiB</code></td>
+            <td><code>12.15 KiB</code></td>
         </tr>
         <tr>
             <td>SlicetrollerStorage</td>
@@ -61,7 +61,7 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>TokenRewards</td>
-            <td><code>9.96 KiB</code></td>
+            <td><code>9.79 KiB</code></td>
         </tr>
         <tr>
             <td>TokenRewardsStorage</td>
