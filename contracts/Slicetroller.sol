@@ -29,136 +29,6 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
         return msg.sender == admin;
     }
 
-    /*** Assets You Are In ***/
-/*
-    /**
-     * @notice Returns the assets an account has entered
-     * @param account The address of the account to pull assets for
-     * @return A dynamic list with the assets the account has entered
-     */
-/*    function getAssetsIn(address account) external view returns (TrancheToken[] memory) {
-        TrancheToken[] memory assetsIn = accountAssets[account];
-
-        return assetsIn;
-    }
-
-    /**
-     * @notice Returns whether the given account is entered in the given asset
-     * @param account The address of the account to check
-     * @param trToken The trToken to check
-     * @return True if the account is in the asset, otherwise false.
-     */
-/*    function checkMembership(address account, TrancheToken trToken) external view returns (bool) {
-        return markets[address(trToken)].accountMembership[account];
-    }
-
-    /**
-     * @notice Add assets to be included in account liquidity calculation
-     * @param trTokens The list of addresses of the trToken markets to be enabled
-     * @return Success indicator for whether each corresponding market was entered
-     */
-/*    function enterMarkets(address[] memory trTokens) public returns (uint[] memory) {
-        uint len = trTokens.length;
-
-        uint[] memory results = new uint[](len);
-        for (uint i = 0; i < len; i++) {
-            ITrancheToken trToken = ITrancheToken(trTokens[i]);
-
-            results[i] = uint(addToMarketInternal(trToken, msg.sender));
-        }
-
-        return results;
-    }
-
-    /**
-     * @notice Add the market to the borrower's "assets in" for liquidity calculations
-     * @param trToken The market to enter
-     * @param borrower The address of the account to modify
-     * @return Success indicator for whether the market was entered
-     */
-/*    function addToMarketInternal(TrancheToken trToken, address borrower) internal returns (bool) {
-        Market storage marketToJoin = markets[address(trToken)];
-
-        if (marketToJoin.isListed && marketToJoin.accountMembership[borrower] == false) {
-            // already joined
-            return Error.NO_ERROR;
-            
-            // survived the gauntlet, add to list
-            // NOTE: we store these somewhat redundantly as a significant optimization
-            //  this avoids having to iterate through the list for the most common use cases
-            //  that is, only when we need to perform liquidity checks
-            //  and not whenever we want to check if an account is in a particular market
-            marketToJoin.accountMembership[borrower] = true;
-            accountAssets[borrower].push(trToken);
-
-            //emit MarketEntered(trToken, borrower);
-
-            return true;
-        } else
-            return false;
-    }
-
-    /**
-     * @notice Removes asset from sender's account liquidity calculation
-     * @dev Sender must not have an outstanding borrow balance in the asset,
-     *  or be providing necessary collateral for an outstanding borrow.
-     * @param trTokenAddress The address of the asset to be removed
-     * @return Whether or not the account successfully exited the market
-     */
-/*    function exitMarket(address trTokenAddress) external returns (uint) {
-        CToken cToken = CToken(trTokenAddress);
-        /* Get sender tokensHeld and amountOwed underlying from the cToken */
-/*        (uint oErr, uint tokensHeld, uint amountOwed, ) = cToken.getAccountSnapshot(msg.sender);
-        require(oErr == 0, "exitMarket: getAccountSnapshot failed"); // semi-opaque error code
-
-        /* Fail if the sender has a borrow balance */
-/*        if (amountOwed != 0) {
-            return fail(Error.NONZERO_BORROW_BALANCE, FailureInfo.EXIT_MARKET_BALANCE_OWED);
-        }
-
-        /* Fail if the sender is not permitted to redeem all of their tokens */
-/*        uint allowed = redeemAllowedInternal(cTokenAddress, msg.sender, tokensHeld);
-        if (allowed != 0) {
-            return failOpaque(Error.REJECTION, FailureInfo.EXIT_MARKET_REJECTION, allowed);
-        }
-
-        Market storage marketToExit = markets[address(cToken)];
-
-        /* Return true if the sender is not already ‘in’ the market */
-/*        if (!marketToExit.accountMembership[msg.sender]) {
-            return uint(Error.NO_ERROR);
-        }
-
-        /* Set cToken account membership to false */
-/*        delete marketToExit.accountMembership[msg.sender];
-
-        /* Delete cToken from the account’s list of assets */
-        // load into memory for faster iteration
-/*        CToken[] memory userAssetList = accountAssets[msg.sender];
-        uint len = userAssetList.length;
-        uint assetIndex = len;
-        for (uint i = 0; i < len; i++) {
-            if (userAssetList[i] == cToken) {
-                assetIndex = i;
-                break;
-            }
-        }
-
-        // We *must* have found the asset in the list or our redundant data structure is broken
-        assert(assetIndex < len);
-
-        // copy last item in list to location of item to be removed, reduce length by 1
-        CToken[] storage storedList = accountAssets[msg.sender];
-        storedList[assetIndex] = storedList[storedList.length - 1];
-        storedList.length--;
-
-        emit MarketExited(cToken, msg.sender);
-
-        return uint(Error.NO_ERROR);
-    }
-*/
-
-
     // (((extProtRet-(totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL)/extProtRet)+balFactor)*dailySliceAmount
     // (totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL = trancheBReturn
     // extProtRet-(trancheBReturn) = DeltaAPY
@@ -228,7 +98,7 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
         return trAReturns;
     }
 
-    function getTrancheBReturns(address _trToken) public view returns (uint trBReturns) {
+    function getTrancheBReturns(address _trToken) public view returns (int256 trBReturns) {
         require(!markets[_trToken].isTrancheA, "token is not a trancheB token");
         if (markets[_trToken].isSliced) {
             address _protocol = markets[_trToken].protocol;
@@ -246,7 +116,7 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
                 uint256 extFutureValue = totTrancheTVL.mul(totRetPercent).div(1e18); // totalTVL*(1+extProtRet)
                 uint256 trAFutureValue = trATVL.mul(trARetPercent).div(1e18); // trATVL*(1+trARet)
                 // (totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL
-                trBReturns = (extFutureValue.sub(trAFutureValue).sub(trBTVL)).mul(1e18).div(trBTVL);  //check decimals!!!
+                trBReturns = (int256(extFutureValue).sub(int256(trAFutureValue)).sub(int256(trBTVL))).mul(int256(1e18)).div(int256(trBTVL));  //check decimals!!!
             } else 
                 trBReturns = 0;
         }
@@ -258,11 +128,11 @@ contract Slicetroller is Initializable, SlicetrollerStorage {
         int256 trBReturns = int256(getTrancheBReturns(_trToken));
         int256 extProtRet = int256(markets[_trToken].externalProtocolReturn);
         int256 deltaAPY = (extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
-        int256 deltaAPYPercentage = deltaAPY.div(extProtRet); // DeltaAPY / extProtRet = DeltaAPYPercentage
+        int256 deltaAPYPercentage = deltaAPY.mul(1e18).div(extProtRet); // DeltaAPY / extProtRet = DeltaAPYPercentage
         trBRewardsPercentage = deltaAPYPercentage.add(int256(markets[_trToken].balanceFactor)); // DeltaAPYPercentage + balanceFactor = trBPercentage
         if (trBRewardsPercentage < 0 )
             trBRewardsPercentage = 0;
-        else if (trBRewardsPercentage < 1e18)
+        else if (trBRewardsPercentage > 1e18)
             trBRewardsPercentage = 1e18;
         return trBRewardsPercentage;
     }
