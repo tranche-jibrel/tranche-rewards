@@ -6,10 +6,9 @@
  */
 pragma solidity 0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../interfaces/IProtocol.sol";
 
-contract Protocol is IProtocol, Initializable {
+contract Protocol is IProtocol {
 
     struct Tranche {
         uint256 trAValue;
@@ -33,7 +32,7 @@ contract Protocol is IProtocol, Initializable {
     uint256 public trCounter;
     uint256 public override totalBlocksPerYear;
 
-    function initialize() public initializer() {
+    constructor() {
         totalBlocksPerYear = 2102400; // same number like in Compound protocol
     }
 
@@ -41,15 +40,14 @@ contract Protocol is IProtocol, Initializable {
             address _trB,
             uint256 _trAVal,
             uint256 _trBVal,
-            uint256 _trARBP,
-            uint256 _trAPrice) external {
+            uint256 _trARBP) external {
         trancheAddresses[trCounter].ATrancheAddress = _trA;
         trancheAddresses[trCounter].BTrancheAddress = _trB;
         tranchesMocks[trCounter].trAValue = _trAVal;
         tranchesMocks[trCounter].trBValue = _trBVal;
         tranchesMocks[trCounter].totalTrValue = _trAVal + _trBVal;
         tranchesMocks[trCounter].trancheACurrentRPB = _trARBP;
-        tranchesMocks[trCounter].storedTrancheAPrice = _trAPrice;
+        //tranchesMocks[trCounter].extProtRPB = _extRPB;
         trCounter = trCounter + 1;
     }
 

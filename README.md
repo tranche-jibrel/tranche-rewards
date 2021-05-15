@@ -52,20 +52,12 @@ Limit is 24 KiB for single contract
     </thead>
     <tbody>
         <tr>
-            <td>Slicetroller</td>
-            <td><code>12.15 KiB</code></td>
+            <td>RewardsDistribution</td>
+            <td><code>8.15 KiB</code></td>
         </tr>
         <tr>
-            <td>SlicetrollerStorage</td>
-            <td><code>1.82 KiB</code></td>
-        </tr>
-        <tr>
-            <td>TokenRewards</td>
-            <td><code>9.79 KiB</code></td>
-        </tr>
-        <tr>
-            <td>TokenRewardsStorage</td>
-            <td><code>1.27 KiB</code></td>
+            <td>RewardsDistributionStorage</td>
+            <td><code>1.17 KiB</code></td>
         </tr>
     </tbody>
   </table>

@@ -7,11 +7,13 @@ var TrancheAToken = artifacts.require("./mocks/TrancheAERC20.sol");
 var TrancheBToken = artifacts.require("./mocks/TrancheBERC20.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
 
-var TokenRewards = artifacts.require("./TokenRewards.sol");
+var RewardsDistribution = artifacts.require("./RewardsDistribution.sol");
 
 module.exports = async (deployer, network, accounts) => {
   const MYERC20_TOKEN_SUPPLY = new BN(5000000);
-  const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+  const MY_TRANCHE_A_RPB = new BN("305494111");
+  const MY_TRANCHE_A_PRICE = new BN("21409027297510851");
+  //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
   if (network == "development") {
     const tokenOwner = accounts[0];
@@ -25,20 +27,17 @@ module.exports = async (deployer, network, accounts) => {
     const myTrBinstance = await deployProxy(TrancheBToken, [MYERC20_TOKEN_SUPPLY], { from: tokenOwner });
     console.log('myTrancheB Deployed: ', myTrBinstance.address);
 
-    await myProtocolinstance.createTranche(myTrAinstance.address, myTrBinstance.address, MYERC20_TOKEN_SUPPLY, MYERC20_TOKEN_SUPPLY);
+    await myProtocolinstance.createTranche(myTrAinstance.address, myTrBinstance.address, 
+          MYERC20_TOKEN_SUPPLY, MYERC20_TOKEN_SUPPLY, MY_TRANCHE_A_RPB, MY_TRANCHE_A_PRICE, { from: tokenOwner });
     count = await myProtocolinstance.trCounter();
     tranchePar = await myProtocolinstance.tranchesMocks(count.toNumber()-1)
-    console.log('count: ', count.toNumber(), ', myTrancheMocks: ', tranchePar[0], tranchePar[1], tranchePar[2].toString(), tranchePar[3].toString(), tranchePar[4].toString());
+    console.log('count: ', count.toNumber(), ', myTrancheMocks: ', tranchePar[0].toString(), tranchePar[1].toString(), tranchePar[2].toString(), tranchePar[3].toString(), tranchePar[4].toString());
 
     const myRewardinstance = await deployProxy(RewardToken, [MYERC20_TOKEN_SUPPLY], { from: tokenOwner });
     console.log('myReward Deployed: ', myRewardinstance.address);
 
-    const mySliceRewards = await deployProxy(TokenRewards, [myRewardinstance.address], { from: tokenOwner });
-    console.log('mySliceRewards Deployed: ', mySliceRewards.address);
-/*
-    await myRewardinstance.approve(mySliceRewards.address, MYERC20_TOKEN_SUPPLY, { from: tokenOwner });
-    await mySliceRewards.setReward(MYERC20_TOKEN_SUPPLY, { from: tokenOwner });
-    console.log("Rewards amount: " + await mySliceRewards.getReward());*/
+    const myRewardsDistribution = await deployProxy(RewardsDistribution, [myRewardinstance.address], { from: tokenOwner });
+    console.log('myRewardsDistribution Deployed: ', myRewardsDistribution.address);
 
   } else if (network == "kovan") {
     let { FEE_COLLECTOR_ADDRESS, PRICE_ORACLE_ADDRESS, IS_UPGRADE,

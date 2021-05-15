@@ -59,7 +59,7 @@ contract Model {
         //uint256 trAPrice = _trAPrice;
         // calc percentage
         // trA APY = trARPB * 2102400 / trAPrice
-        trAReturns = trancheARPB.mul(totBlksYear).mul(1e18).div(trAPrice);  //check decimals!!!
+        trAReturns = trancheARPB.mul(totBlksYear).mul(1e18).div(trAPrice);
         return trAReturns;
     }
     
