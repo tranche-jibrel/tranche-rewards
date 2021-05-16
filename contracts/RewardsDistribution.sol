@@ -43,7 +43,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         availableMarkets[marketsCounter].balanceFactor = _balFactor; // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarkets[marketsCounter].updateBlock = block.number;
         availableMarkets[marketsCounter].enabled = true;
-        availableMarkets[marketsCounter].trancheRewardsPercentage = _tranchePercentage;  //5000 --> 50% (divider = 10000)
+        availableMarkets[marketsCounter].trancheRewardsPercentage = _tranchePercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         marketsCounter = marketsCounter.add(1);
     }
@@ -114,7 +114,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         }
 
         return allMarketTVL;
-  }
+    }
 
     function getTrancheAMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheATVL) {
         //require(availableMarkets[_idxMarket].enabled, "Market not enabled");
