@@ -144,7 +144,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         uint256 totalValue = getAllMarketsTVL();
 
         if (totalValue > 0) {
-            uint256 trancheVal = getTrancheAMarketTVL(_idxMarket).add(getTrancheBMarketTVL(_idxMarket));
+            uint256 trancheVal = getTrancheMarketTVL(_idxMarket);
             marketShare = trancheVal.mul(1e18).div(totalValue);
         } else 
             marketShare = 0;

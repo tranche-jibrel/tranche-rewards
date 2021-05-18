@@ -7,6 +7,8 @@
 pragma solidity 0.8.0;
 
 interface IProtocol {
+    function getTrA(uint256 _trancheNum) external view returns (address);
+    function getTrB(uint256 _trancheNum) external view returns (address);
     function getTrAValue(uint256 _trancheNum) external view returns (uint256);
     function getTrBValue(uint256 _trancheNum) external view returns (uint256);
     function getTotalValue(uint256 _trancheNum) external view returns (uint256);

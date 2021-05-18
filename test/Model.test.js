@@ -13,7 +13,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 const Model = artifacts.require('Model');
 
-contract('JTrancheERC20', function (accounts) {
+contract('Model', function (accounts) {
   const [owner, tokenHolder1, tokenHolder2, tokenHolder3, anyone] = accounts;
   const gasPrice = new BN('1');
   const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";

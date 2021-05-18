@@ -59,8 +59,16 @@ contract Protocol is IProtocol, Initializable {
 
     function setTrB(uint256 _trancheNum, address _trB) external {
         trancheAddresses[_trancheNum].BTrancheAddress = _trB;
-
     }
+
+    function getTrA(uint256 _trancheNum) external view override returns(address) {
+        return trancheAddresses[_trancheNum].ATrancheAddress;
+    }
+
+    function getTrB(uint256 _trancheNum) external view override returns(address) {
+        return trancheAddresses[_trancheNum].BTrancheAddress;
+    }
+
     function setTrAValue(uint256 _trancheNum, uint256 _trAVal) external {
         tranchesMocks[_trancheNum].trAValue = _trAVal;
     }
