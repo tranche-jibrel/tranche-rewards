@@ -41,6 +41,24 @@ All in one formula:
 
     (((extProtRet-(totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL)/extProtRet)+balFactor)*dailySliceAmount
 
+## Tests
+
+Ways to test contracts:
+
+All tests (ganache required: npx ganache-cli --deterministic -l 12000000), gas reporter included:
+
+    `truffle test`   
+
+1 test only (ganache required: npx ganache-cli --deterministic -l 12000000), gas reporter included:
+
+    `truffle test ./test/Rewards2.test.js`   
+
+Solidity Coverage (no ganache required):
+
+    `truffle run coverage --network development`   
+    
+     
+
 ## Contracts Size (main contracts, no interfaces, no test contracts)
 Limit is 24 KiB for single contract
 <table>
@@ -53,7 +71,7 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>RewardsDistribution</td>
-            <td><code>8.15 KiB</code></td>
+            <td><code>8.93 KiB</code></td>
         </tr>
         <tr>
             <td>RewardsDistributionStorage</td>

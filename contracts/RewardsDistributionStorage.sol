@@ -17,15 +17,23 @@ contract RewardsDistributionStorage is OwnableUpgradeable {
         address bTranche;
         uint256 protocolTrNumber;
         uint256 balanceFactor;  // scaled by 1e18
-        uint256 trancheARewardsAmount;
-        uint256 trancheBRewardsAmount;
         uint256 updateBlock;
-        uint256 trancheRewardsPercentage;  // scaled by 1e18
         uint256 extProtocolPercentage;  // scaled by 1e18
         bool enabled;
     }
 
+    struct MarketRewards {
+        //uint256 rewardTokenUnderlyingRatio;
+        uint256 marketRewardsPercentage;  // scaled by 1e18
+        uint256 trancheARewardsAmount;
+        uint256 trancheBRewardsAmount;
+        uint256 rewardsFrequency;  // in days
+        uint256 rewardsTrAAPY; // scaled by 1e18
+        uint256 rewardsTrBAPY; // scaled by 1e18
+    }
+
     mapping(uint256 => Market) public availableMarkets;
+    mapping(uint256 => MarketRewards) public availableMarketsRewards;
     // market -> current rewards balance
     mapping(uint256 => uint256) public fundsATokenBalance;
     mapping(uint256 => uint256) public fundsBTokenBalance;

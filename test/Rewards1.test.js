@@ -138,7 +138,9 @@ contract('Rewards1', function (accounts) {
 
   describe('settings', function () {
     it('set tranche in rewards distribution contract', async function () {
-      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, MY_EXT_PROT_RET, {
+      console.log(protocolContract.address)
+      console.log(owner)
+      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, MY_EXT_PROT_RET, 7, {
         from: owner
       });
       count = await rewardsDistribContract.marketsCounter();

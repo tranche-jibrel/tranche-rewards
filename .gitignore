@@ -6,3 +6,6 @@ other/
 compound/
 node_modules
 unknown*
+coverage
+coverage.json
+coverageEnv
