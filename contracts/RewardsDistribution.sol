@@ -11,11 +11,11 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./RewardsDistributionStorage.sol";
 import "./interfaces/IProtocol.sol";
-import "./interfaces/IRewardsDistribtuion.sol";
+import "./interfaces/IRewardsDistribution.sol";
 import "./interfaces/IJTrancheTokens.sol";
 import "./math/SafeMathInt.sol";
 
-contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, IRewardsDistribtuion {
+contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, IRewardsDistribution {
     using SafeMath for uint256;
     using SafeMathInt for int256;
 
@@ -54,6 +54,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _balFactor balance factor, meaning percentage on tranche B for asintotic values (scaled by 1e18)
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
+     * @param _rewardsFreq rewards frequency in days
      */
     function addTrancheMarket(address _protocol, 
             uint256 _protocolTrNumber,
@@ -61,9 +62,13 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             uint256 _marketPercentage,
             uint256 _extProtReturn,
             uint256 _rewardsFreq) external onlyOwner{
+        require(_balFactor <= uint256(1e18), "TokenRewards: balance factor too high");
+        require(_marketPercentage <= uint256(1e18), "TokenRewards: market percentage too high");
+        require(_rewardsFreq > 0 && _rewardsFreq < uint256(366), "TokenRewards: rewards frequency too high");
         availableMarkets[marketsCounter].protocol = _protocol;
         availableMarkets[marketsCounter].protocolTrNumber = _protocolTrNumber;
         ( , , address trAAddress, address trBAddress) = IProtocol(_protocol).trancheAddresses(_protocolTrNumber);
+        require(trAAddress != address(0) && trBAddress != address(0), "TokenRewards: tranches not found");
         availableMarkets[marketsCounter].aTranche = trAAddress;
         availableMarkets[marketsCounter].bTranche = trBAddress;
         availableMarkets[marketsCounter].balanceFactor = _balFactor; // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
@@ -73,6 +78,10 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarketsRewards[marketsCounter].rewardsFrequency = _rewardsFreq * 1 days; // expressed in days
         
+        emit NewMarketAdded(marketsCounter, availableMarkets[marketsCounter].protocol, availableMarkets[marketsCounter].protocolTrNumber,
+            availableMarkets[marketsCounter].balanceFactor, availableMarkets[marketsCounter].extProtocolPercentage,
+            availableMarketsRewards[marketsCounter].marketRewardsPercentage, availableMarketsRewards[marketsCounter].rewardsFrequency, block.number);
+
         marketsCounter = marketsCounter.add(1);
     }
 
@@ -100,7 +109,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _rewardsFreq rewards frequency (in days)
      */
     function setAllMarketsRewardsFrequency(uint256 _rewardsFreq) external onlyOwner {
-        require(_rewardsFreq > 0, "TokenRewards: rewards frequency can not be zero");
+        require(_rewardsFreq > 0 && _rewardsFreq <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarketsRewards[i].rewardsFrequency = _rewardsFreq * 1 days;
         }
@@ -168,8 +177,9 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             } else {
                 availableMarketsRewards[i].marketRewardsPercentage = 0;
             }
+
+            emit SliceSpeedUpdated(i, availableMarketsRewards[i].marketRewardsPercentage);
         }
-        //emit SliceSpeedUpdated(trToken, newSpeed);
     }
 
     /**
@@ -281,6 +291,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardToken), availableMarkets[_idxMarket].aTranche, trAAmount);
 
             availableMarkets[_idxMarket].updateBlock = block.number;
+
+            emit FundsDistributed(_idxMarket, trAAmount, trBAmount, block.number);
         }
     }
 
@@ -304,6 +316,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardToken), msg.sender, availableMarkets[_idxMarket].aTranche, trAAmount);
 
         availableMarkets[_idxMarket].updateBlock = block.number;
+
+        emit FundsDistributed(_idxMarket, trAAmount, trBAmount, block.number);
     }
 
     /**
@@ -329,6 +343,10 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
                         availableMarketsRewards[_idxMarket].trancheBRewardsAmount.mul(distribTimes).mul(1e18).div(trBTVL); // scaled by 1e18
                 availableMarketsRewards[_idxMarket].trancheBRewardsAmount = 0;
             }
+
+            availableMarkets[_idxMarket].updateBlock = block.number;
+
+            emit RewardsDistributedAPY(_idxMarket, availableMarketsRewards[_idxMarket].rewardsTrAAPY, availableMarketsRewards[_idxMarket].rewardsTrBAPY, block.number);
         }
     }
 

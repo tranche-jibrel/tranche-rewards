@@ -84,11 +84,13 @@ contract('Rewards1', function (accounts) {
     expect(protocolContract.address).to.be.not.equal(ZERO_ADDRESS);
     expect(protocolContract.address).to.match(/0x[0-9a-fA-F]{40}/);
     // console.log(protocolContract.address);
-    trAFDTContract = await TrancheAFDT.deployed();
+    trA0 = await protocolContract.getTrA(0);
+    trAFDTContract = await TrancheAFDT.at(trA0);
     expect(trAFDTContract.address).to.be.not.equal(ZERO_ADDRESS);
     expect(trAFDTContract.address).to.match(/0x[0-9a-fA-F]{40}/);
     // console.log(trAFDTContract.address);
-    trBFDTContract = await TrancheBFDT.deployed();
+    trB0 = await protocolContract.getTrB(0);
+    trBFDTContract = await TrancheBFDT.at(trB0);
     expect(trBFDTContract.address).to.be.not.equal(ZERO_ADDRESS);
     expect(trBFDTContract.address).to.match(/0x[0-9a-fA-F]{40}/);
     // console.log(trBFDTContract.address);
@@ -138,11 +140,15 @@ contract('Rewards1', function (accounts) {
 
   describe('settings', function () {
     it('set tranche in rewards distribution contract', async function () {
-      console.log(protocolContract.address)
-      console.log(owner)
       tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, MY_EXT_PROT_RET, 7, {
         from: owner
       });
+
+      console.log("Total TVL: " + (await rewardsDistribContract.getAllMarketsTVL()).toString())
+      console.log("Total TVL in Market0: " + (await rewardsDistribContract.getTrancheMarketTVL(0)).toString())
+
+      await rewardsDistribContract.refreshSliceSpeeds();
+
       count = await rewardsDistribContract.marketsCounter();
       console.log("Count markets: " + count)
       trATVL = await rewardsDistribContract.getTrancheAMarketTVL(0);
@@ -164,22 +170,23 @@ contract('Rewards1', function (accounts) {
       trARewPerc = ether('1').sub(trBRewPerc);
       console.log("tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
 
-      await rewardTokenContract.approve(rewardsDistribContract.address, ether("1000"), {from: owner})
-      await rewardsDistribContract.distributeAllMarketsFunds(ether("1000"));
+      await rewardTokenContract.approve(rewardsDistribContract.address, ether("100"), {from: owner})
+      await rewardsDistribContract.distributeAllMarketsFunds(ether("100"));
     });
 
     it('distribute rewards tranche A to users', async function () {
       console.log("rewards tokens in tranche A: " + web3.utils.fromWei(await rewardTokenContract.balanceOf(trAFDTContract.address)))
       console.log("rewards tokens in tranche B: " + web3.utils.fromWei(await rewardTokenContract.balanceOf(trBFDTContract.address)))
-      tx = await trAFDTContract.updateFundsReceived();
+      tx = await rewardsDistribContract.distributeRewardsTokenSingleMarket(0);
+
+      console.log("Rewards APY trA mkt0: " + web3.utils.fromWei((await rewardsDistribContract.getRewardsAPYSingleMarketTrancheA(0)).toString()) * 100 + "%")
+      console.log("Rewards APY trB mkt0: " + web3.utils.fromWei((await rewardsDistribContract.getRewardsAPYSingleMarketTrancheB(0)).toString()) * 100 + "%")
+
       console.log("User1 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user1)))
       console.log("User2 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user2)))
       console.log("User3 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user3)))
       console.log("User4 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user4)))
-    });
 
-    it('distribute rewards tranche B to users', async function () {
-      tx = await trBFDTContract.updateFundsReceived();
       console.log("User1 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user1)))
       console.log("User2 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user2)))
       console.log("User3 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user3)))
@@ -242,14 +249,17 @@ contract('Rewards1', function (accounts) {
         trARewPerc = ether('1').sub(trBRewPerc);
         console.log("tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
 
-        await rewardTokenContract.approve(rewardsDistribContract.address, ether("1000"), {from: owner})
-        await rewardsDistribContract.distributeAllMarketsFunds(ether("1000"));
+        await rewardTokenContract.approve(rewardsDistribContract.address, ether("100"), {from: owner})
+        await rewardsDistribContract.distributeAllMarketsFunds(ether("100"));
       });
   
       it('distribute rewards tranche A to users', async function () {
         console.log("rewards tokens in tranche A: " + web3.utils.fromWei(await rewardTokenContract.balanceOf(trAFDTContract.address)))
         console.log("rewards tokens in tranche B: " + web3.utils.fromWei(await rewardTokenContract.balanceOf(trBFDTContract.address)))
         tx = await trAFDTContract.updateFundsReceived();
+
+        console.log("Rewards APY trA mkt0: " + web3.utils.fromWei((await rewardsDistribContract.getRewardsAPYSingleMarketTrancheA(0)).toString()) * 100 + "%")
+      
         console.log("User1 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user1)))
         console.log("User2 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user2)))
         console.log("User3 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user3)))
@@ -258,6 +268,9 @@ contract('Rewards1', function (accounts) {
   
       it('distribute rewards tranche B to users', async function () {
         tx = await trBFDTContract.updateFundsReceived();
+
+        console.log("Rewards APY trB mkt0: " + web3.utils.fromWei((await rewardsDistribContract.getRewardsAPYSingleMarketTrancheB(0)).toString()) * 100 + "%")
+
         console.log("User1 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user1)))
         console.log("User2 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user2)))
         console.log("User3 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user3)))
