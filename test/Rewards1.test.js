@@ -140,7 +140,8 @@ contract('Rewards1', function (accounts) {
 
   describe('settings', function () {
     it('set tranche in rewards distribution contract', async function () {
-      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, MY_EXT_PROT_RET, 7, {
+      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, 
+        MY_EXT_PROT_RET, 7, web3.utils.toWei("1", "ether"), {
         from: owner
       });
 
@@ -232,7 +233,7 @@ contract('Rewards1', function (accounts) {
   describe('changing parameters of external return', function () {
     describe('external protocol return low, 2%', function () {
       it('setting extProtRet to 2%', async function () {
-        tx = await rewardsDistribContract.setExtProtocolPercent(0, ether('0.02'), {
+        tx = await rewardsDistribContract.setExtProtocolPercentSingleMarket(0, ether('0.02'), {
           from: owner
         });
         availMkt = await rewardsDistribContract.availableMarkets(0);
@@ -314,7 +315,7 @@ contract('Rewards1', function (accounts) {
     });
   });
 
-  describe('changing parameters on tranche B amount', function () {
+  describe('changing parameters on tranche B amount and test single market distribution', function () {
     describe('tranche B Amount increases', function () {
       it('setting tranche B amount to 20000', async function () {
         await protocolContract.setTrBValue(0, ether('20000'));
@@ -335,6 +336,33 @@ contract('Rewards1', function (accounts) {
         console.log("tranche B rewards percentage: " + web3.utils.fromWei(trBRewPerc) * 100 + " %");
         trARewPerc = ether('1').sub(trBRewPerc);
         console.log("tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
+
+        await rewardTokenContract.approve(rewardsDistribContract.address, ether("100"), {from: owner})
+        await rewardsDistribContract.distributeSingleMarketsFunds(0, ether("100"));
+      });
+
+      it('distribute rewards tranche A to users', async function () {
+        console.log("rewards tokens in tranche A: " + web3.utils.fromWei(await rewardTokenContract.balanceOf(trAFDTContract.address)))
+        console.log("rewards tokens in tranche B: " + web3.utils.fromWei(await rewardTokenContract.balanceOf(trBFDTContract.address)))
+        tx = await trAFDTContract.updateFundsReceived();
+
+        console.log("Rewards APY trA mkt0: " + web3.utils.fromWei((await rewardsDistribContract.getRewardsAPYSingleMarketTrancheA(0)).toString()) * 100 + "%")
+      
+        console.log("User1 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user1)))
+        console.log("User2 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user2)))
+        console.log("User3 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user3)))
+        console.log("User4 withdrawable tokens from tranche A: " + web3.utils.fromWei(await trAFDTContract.withdrawableFundsOf(user4)))
+      });
+
+      it('distribute rewards tranche B to users', async function () {
+        tx = await trBFDTContract.updateFundsReceived();
+
+        console.log("Rewards APY trB mkt0: " + web3.utils.fromWei((await rewardsDistribContract.getRewardsAPYSingleMarketTrancheB(0)).toString()) * 100 + "%")
+
+        console.log("User1 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user1)))
+        console.log("User2 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user2)))
+        console.log("User3 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user3)))
+        console.log("User4 withdrawable tokens from tranche B: " + web3.utils.fromWei(await trBFDTContract.withdrawableFundsOf(user4)))
       });
 
       it('setting tranche B amount to 100000', async function () {
@@ -363,7 +391,7 @@ contract('Rewards1', function (accounts) {
   describe('changing parameters of external return', function () {
     describe('external protocol return high, 4%', function () {
       it('setting extProtRet to 4%', async function () {
-        tx = await rewardsDistribContract.setExtProtocolPercent(0, ether('0.04'), {
+        tx = await rewardsDistribContract.setExtProtocolPercentSingleMarket(0, ether('0.04'), {
           from: owner
         });
         availMkt = await rewardsDistribContract.availableMarkets(0);
@@ -437,6 +465,77 @@ contract('Rewards1', function (accounts) {
         console.log("tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
       });
     });
+  });
+
+  describe('calling methods to modify parameters', function () {
+    it('changing single market parameters', async function () {
+      tx = await rewardsDistribContract.enableSingleMarket(0, false);
+      tx = await rewardsDistribContract.setSingleMarketRewardsFrequency(0, 30);
+      tx = await rewardsDistribContract.setRewardsPercentageSingleMarket(0, web3.utils.toWei('0.8'));
+      tx = await rewardsDistribContract.setExtProtocolPercentSingleMarket(0, web3.utils.toWei('0.06'));
+      tx = await rewardsDistribContract.setBalanceFactorSingleMarket(0, web3.utils.toWei('0.7'));
+      tx = await rewardsDistribContract.setUnderlyingPriceSingleMarket(0, web3.utils.toWei('1.5'));
+
+      mkt0Params = await rewardsDistribContract.availableMarkets(0);
+      mkt0ParamRewards = await rewardsDistribContract.availableMarketsRewards(0);
+/*
+      for (i=0; i < 8; i++) {
+        console.log(mkt0Params[i].toString());
+      }
+*/
+      expect(mkt0Params[4].toString()).to.be.equal(web3.utils.toWei('0.7'))
+      expect(mkt0Params[6].toString()).to.be.equal(web3.utils.toWei('0.06'))
+      expect(mkt0Params[7]).to.be.false
+/*
+      console.log("---")
+
+      for (i=0; i < 7; i++) {
+        console.log(mkt0ParamRewards[i].toString());
+      }
+*/
+      expect(mkt0ParamRewards[0].toString()).to.be.equal(web3.utils.toWei('1.5'))
+      expect(mkt0ParamRewards[1].toString()).to.be.equal(web3.utils.toWei('0.8'))
+      expect(mkt0ParamRewards[4].toString()).to.be.equal((2592000).toString()) // 86400 * 30
+
+      percent = await rewardsDistribContract.getMarketRewardsPercentage()
+      expect(percent.toString()).to.be.equal(web3.utils.toWei('0')) // no market enabled!
+
+    });
+
+    it('changing all markets parameters', async function () {
+      tx = await rewardsDistribContract.enableAllMarket([true]);
+      tx = await rewardsDistribContract.setRewardsFrequencyAllMarkets([7]);
+      tx = await rewardsDistribContract.setRewardsPercentageAllMarkets([web3.utils.toWei('0.6')]);
+      tx = await rewardsDistribContract.setExtProtocolPercentAllMarkets([web3.utils.toWei('0.03')]);
+      tx = await rewardsDistribContract.setBalanceFactorAllMarkets([web3.utils.toWei('0.4')]);
+      tx = await rewardsDistribContract.setUnderlyingPriceAllMarkets([web3.utils.toWei('1.2')]);
+
+      mkt0Params = await rewardsDistribContract.availableMarkets(0);
+      mkt0ParamRewards = await rewardsDistribContract.availableMarketsRewards(0);
+/* 
+      for (i=0; i < 8; i++) {
+        console.log(mkt0Params[i].toString());
+      }
+*/      
+      expect(mkt0Params[4].toString()).to.be.equal(web3.utils.toWei('0.4'))
+      expect(mkt0Params[6].toString()).to.be.equal(web3.utils.toWei('0.03'))
+      expect(mkt0Params[7]).to.be.true
+/*
+      console.log("---")
+
+      for (i=0; i < 7; i++) {
+        console.log(mkt0ParamRewards[i].toString());
+      }
+*/
+      expect(mkt0ParamRewards[0].toString()).to.be.equal(web3.utils.toWei('1.2'))
+      expect(mkt0ParamRewards[1].toString()).to.be.equal(web3.utils.toWei('0.6'))
+      expect(mkt0ParamRewards[4].toString()).to.be.equal((604800).toString()) // 86400 * 7
+
+      percent = await rewardsDistribContract.getMarketRewardsPercentage()
+      expect(percent.toString()).to.be.equal(web3.utils.toWei('0.6'))
+
+    });
+
   });
 
 });

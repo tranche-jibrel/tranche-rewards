@@ -27,23 +27,13 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         OwnableUpgradeable.__Ownable_init();
         rewardToken = _token;
     }
-    
-    /**
-     * @dev internal function - utility function to transform numbers in int256
-     * @param a number to be converted in int256
-     * @return number transformed in int256 
-     */
-    function toInt256Safe(uint256 a) internal pure returns (int256) {
-        int256 b = int256(a);
-        require(b >= 0);
-        return b;
-    }
 
     /**
      * @dev set the address of the reward token
      * @param _token rewards token address (SLICE or other)
      */
     function setRewardTokenAddress(address _token) external onlyOwner {
+        require(_token != address(0), "TokenRewards: address not allowed");
         rewardToken = _token;
     }
 
@@ -55,13 +45,15 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
      * @param _rewardsFreq rewards frequency in days
+     * @param _underlyingPrice initial underlying price, in common currency (scaled by 1e18)
      */
     function addTrancheMarket(address _protocol, 
             uint256 _protocolTrNumber,
             uint256 _balFactor,
             uint256 _marketPercentage,
             uint256 _extProtReturn,
-            uint256 _rewardsFreq) external onlyOwner{
+            uint256 _rewardsFreq,
+            uint256 _underlyingPrice) external onlyOwner{
         require(_balFactor <= uint256(1e18), "TokenRewards: balance factor too high");
         require(_marketPercentage <= uint256(1e18), "TokenRewards: market percentage too high");
         require(_rewardsFreq > 0 && _rewardsFreq < uint256(366), "TokenRewards: rewards frequency too high");
@@ -77,6 +69,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarketsRewards[marketsCounter].rewardsFrequency = _rewardsFreq * 1 days; // expressed in days
+        availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice; // scaled in 1e18
         
         emit NewMarketAdded(marketsCounter, availableMarkets[marketsCounter].protocol, availableMarkets[marketsCounter].protocolTrNumber,
             availableMarkets[marketsCounter].balanceFactor, availableMarkets[marketsCounter].extProtocolPercentage,
@@ -90,8 +83,19 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _idxMarket market index
      * @param _enable true or false
      */
-    function enableMarket(uint256 _idxMarket, bool _enable) external onlyOwner {
+    function enableSingleMarket(uint256 _idxMarket, bool _enable) external onlyOwner {
         availableMarkets[_idxMarket].enabled = _enable;
+    }
+
+    /**
+     * @dev enable or disable a single market
+     * @param _enables true or false array
+     */
+    function enableAllMarket(bool[] memory _enables) external onlyOwner {
+        require(_enables.length == marketsCounter, "TokenRewards: enable array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarkets[i].enabled = _enables[i];
+        }
     }
 
     /**
@@ -100,18 +104,18 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _rewardsFreq rewards frequency (in days)
      */
     function setSingleMarketRewardsFrequency(uint256 _idxMarket, uint256 _rewardsFreq) external onlyOwner {
-        require(_rewardsFreq > 0, "TokenRewards: rewards frequency can not be zero");
+        require(_rewardsFreq > 0 && _rewardsFreq <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
         availableMarketsRewards[_idxMarket].rewardsFrequency = _rewardsFreq * 1 days;
     }
 
     /**
      * @dev set reward frequency for all markets
-     * @param _rewardsFreq rewards frequency (in days)
+     * @param _rewardsFreqs rewards frequency array (in days)
      */
-    function setAllMarketsRewardsFrequency(uint256 _rewardsFreq) external onlyOwner {
-        require(_rewardsFreq > 0 && _rewardsFreq <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
+    function setRewardsFrequencyAllMarkets(uint256[] memory _rewardsFreqs) external onlyOwner {
+        require(_rewardsFreqs.length ==  marketsCounter, "TokenRewards: rewards frequency array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
-            availableMarketsRewards[i].rewardsFrequency = _rewardsFreq * 1 days;
+            availableMarketsRewards[i].rewardsFrequency = _rewardsFreqs[i] * 1 days;
         }
     }
 
@@ -120,9 +124,20 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _idxMarket market index
      * @param _percentage rewards percentage (scaled by 1e18)
      */
-    function setSingleMarketRewardsPercentage(uint256 _idxMarket, uint256 _percentage) external onlyOwner {
+    function setRewardsPercentageSingleMarket(uint256 _idxMarket, uint256 _percentage) external onlyOwner {
         require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
         availableMarketsRewards[_idxMarket].marketRewardsPercentage = _percentage;
+    }
+
+    /**
+     * @dev set single market rewards percentage
+     * @param _percentages rewards percentage array (scaled by 1e18)
+     */
+    function setRewardsPercentageAllMarkets(uint256[] memory _percentages) external onlyOwner {
+        require(_percentages.length == marketsCounter, "TokenRewards: ext protocol array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarketsRewards[i].marketRewardsPercentage = _percentages[i];
+        }
     }
 
     /**
@@ -143,8 +158,20 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _idxMarket market index
      * @param _extProtPerc external protocol rewards percentage (scaled by 1e18)
      */
-    function setExtProtocolPercent(uint256 _idxMarket, uint256 _extProtPerc) external onlyOwner {
+    function setExtProtocolPercentSingleMarket(uint256 _idxMarket, uint256 _extProtPerc) external onlyOwner {
+        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
         availableMarkets[_idxMarket].extProtocolPercentage = _extProtPerc;
+    }
+
+    /**
+     * @dev set external returns for all markets
+     * @param _extProtPercs external protocol rewards percentage array (scaled by 1e18)
+     */
+    function setExtProtocolPercentAllMarkets(uint256[] memory _extProtPercs) external onlyOwner {
+        require(_extProtPercs.length == marketsCounter, "TokenRewards: ext protocol array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarkets[i].extProtocolPercentage = _extProtPercs[i];
+        }
     }
 
     /**
@@ -152,10 +179,43 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _idxMarket market index
      * @param _balFactor balance factor (scaled by 1e18)
      */
-    function setBalanceFactor(uint256 _idxMarket, uint256 _balFactor) external onlyOwner {
+    function setBalanceFactorSingleMarket(uint256 _idxMarket, uint256 _balFactor) external onlyOwner {
+        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
         availableMarkets[_idxMarket].balanceFactor = _balFactor;
     }
 
+    /**
+     * @dev set balance factor (asynthotic value for tranche B) for all markets
+     * @param _balFactors balance factor array (scaled by 1e18)
+     */
+    function setBalanceFactorAllMarkets(uint256[] memory _balFactors) external onlyOwner {
+        require(_balFactors.length == marketsCounter, "TokenRewards: ext protocol array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarkets[i].balanceFactor = _balFactors[i];
+        }
+    }
+
+    /**
+     * @dev set underlying price in common currency for a market (scaled by 1e18)
+     * @param _idxMarket market index
+     * @param _price underlying price (scaled by 1e18)
+     */
+    function setUnderlyingPriceSingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
+        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+        availableMarketsRewards[_idxMarket].underlyingPrice = _price;
+    }
+
+    /**
+     * @dev set underlying price in common currency for all markets (scaled by 1e18)
+     * @param _prices underlying prices array (scaled by 1e18)
+     */
+    function setUnderlyingPriceAllMarkets(uint256[] memory _prices) external onlyOwner {
+        require(_prices.length == marketsCounter, "TokenRewards: Prices array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarketsRewards[i].underlyingPrice = _prices[i];
+        }
+    }
+    
     /**
      * @dev Recalculate and update Slice speeds for all markets
      */
@@ -172,7 +232,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
 
         for (uint i = 0; i < marketsCounter; i++) {
             if (availableMarkets[i].enabled && allMarketsEnabledTVL > 0) {
-                uint256 percentTVL = getTrancheMarketTVL(i).mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
+                uint256 tmpMarketVal = getTrancheMarketTVL(i).mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
+                uint256 percentTVL = tmpMarketVal.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
                 availableMarketsRewards[i].marketRewardsPercentage = percentTVL;
             } else {
                 availableMarketsRewards[i].marketRewardsPercentage = 0;
@@ -195,7 +256,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             if (availableMarkets[i].enabled) {
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
-                allMarketTVL = allMarketTVL.add(IProtocol(_protocol).getTotalValue(_trNum));
+                uint256 tmpMarketVal = (IProtocol(_protocol).getTotalValue(_trNum)).mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
+                allMarketTVL = allMarketTVL.add(tmpMarketVal);
             }
         }
 
@@ -208,10 +270,9 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @return trancheATVL market total value locked (tracnhe A)
      */
     function getTrancheAMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheATVL) {
-        //require(availableMarkets[_idxMarket].enabled, "Market not enabled");
         address _protocol = availableMarkets[_idxMarket].protocol;
         uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
-        trancheATVL = IProtocol(_protocol).getTrAValue(_trNum);
+        trancheATVL = (IProtocol(_protocol).getTrAValue(_trNum)).mul(availableMarketsRewards[_idxMarket].underlyingPrice).div(1e18);
         return trancheATVL;
     }
 
@@ -221,10 +282,9 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @return trancheBTVL market total value locked (tracnhe B)
      */
     function getTrancheBMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheBTVL) {
-        //require(availableMarkets[_idxMarket].enabled, "Market not enabled");
         address _protocol = availableMarkets[_idxMarket].protocol;
         uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
-        trancheBTVL = IProtocol(_protocol).getTrBValue(_trNum);
+        trancheBTVL = (IProtocol(_protocol).getTrBValue(_trNum)).mul(availableMarketsRewards[_idxMarket].underlyingPrice).div(1e18);
         return trancheBTVL;
     }
 
@@ -361,24 +421,18 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
     }
 
     function getRewardsAPYSingleMarketTrancheA(uint256 _idxMarket) external view returns(uint256 rewardsAPY) {
-        // uint256 trATVL = getTrancheAMarketTVL(_idxMarket);
-        // uint256 distribTimes = 365 days / availableMarketsRewards[_idxMarket].rewardsFrequency;
-        // rewardsAPY = availableMarketsRewards[_idxMarket].trancheARewardsAmount.mul(distribTimes).mul(1e18).div(trATVL);
         rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrAAPY;
         return rewardsAPY;
     }
 
     function getRewardsAPYSingleMarketTrancheB(uint256 _idxMarket) external view returns(uint256 rewardsAPY) {
-        // uint256 trBTVL = getTrancheBMarketTVL(_idxMarket);
-        // uint256 distribTimes = 365 days / availableMarketsRewards[_idxMarket].rewardsFrequency;
-        // rewardsAPY = availableMarketsRewards[_idxMarket].trancheBRewardsAmount.mul(distribTimes).mul(1e18).div(trBTVL); // scaled by 1e18
         rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrBAPY;
         return rewardsAPY;
     }
 
 /*************************************** MODEL ************************************************/
     /**
-     * @dev get tranche A returns of an available market
+     * @dev get tranche A returns of an available market 
      * @param _idxMarket market index
      * @return trAReturns tranche A returns (0 - 1e18)
      */

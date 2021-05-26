@@ -191,9 +191,11 @@ contract('Rewards2', function (accounts) {
 
   describe('settings', function () {
     it('set tranche in rewards distribution contract', async function () {
-      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, MY_EXT_PROT_RET, 7, {from: owner});
+      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, 
+            MY_EXT_PROT_RET, 7, web3.utils.toWei("1", "ether"), {from: owner});
 
-      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 1, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, MY_EXT_PROT_RET, 7, {from: owner});
+      tx = await rewardsDistribContract.addTrancheMarket(protocolContract.address, 1, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE, 
+            MY_EXT_PROT_RET, 7, web3.utils.toWei("1", "ether"), {from: owner});
 
       console.log("Total TVL: " + (await rewardsDistribContract.getAllMarketsTVL()).toString())
       console.log("Total TVL in Market0: " + (await rewardsDistribContract.getTrancheMarketTVL(0)).toString())
@@ -327,7 +329,7 @@ contract('Rewards2', function (accounts) {
   describe('changing parameters of external return', function () {
     describe('external protocol return low, 2%', function () {
       it('setting extProtRet to 2%', async function () {
-        tx = await rewardsDistribContract.setExtProtocolPercent(0, ether('0.02'), {
+        tx = await rewardsDistribContract.setExtProtocolPercentSingleMarket(0, ether('0.02'), {
           from: owner
         });
         availMkt = await rewardsDistribContract.availableMarkets(0);
@@ -638,7 +640,7 @@ contract('Rewards2', function (accounts) {
   describe('changing parameters of external return', function () {
     describe('external protocol return high, 4%', function () {
       it('setting extProtRet to 4%', async function () {
-        tx = await rewardsDistribContract.setExtProtocolPercent(0, ether('0.04'), {
+        tx = await rewardsDistribContract.setExtProtocolPercentSingleMarket(0, ether('0.04'), {
           from: owner
         });
         availMkt = await rewardsDistribContract.availableMarkets(0);

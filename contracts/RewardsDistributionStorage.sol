@@ -23,7 +23,7 @@ contract RewardsDistributionStorage is OwnableUpgradeable {
     }
 
     struct MarketRewards {
-        //uint256 rewardTokenUnderlyingRatio;
+        uint256 underlyingPrice;
         uint256 marketRewardsPercentage;  // scaled by 1e18
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;
