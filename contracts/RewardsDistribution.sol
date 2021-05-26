@@ -103,7 +103,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _idxMarket market index
      * @param _rewardsFreq rewards frequency (in days)
      */
-    function setSingleMarketRewardsFrequency(uint256 _idxMarket, uint256 _rewardsFreq) external onlyOwner {
+    function setRewardsFrequencySingleMarket(uint256 _idxMarket, uint256 _rewardsFreq) external onlyOwner {
         require(_rewardsFreq > 0 && _rewardsFreq <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
         availableMarketsRewards[_idxMarket].rewardsFrequency = _rewardsFreq * 1 days;
     }

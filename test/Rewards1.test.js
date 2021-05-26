@@ -470,7 +470,7 @@ contract('Rewards1', function (accounts) {
   describe('calling methods to modify parameters', function () {
     it('changing single market parameters', async function () {
       tx = await rewardsDistribContract.enableSingleMarket(0, false);
-      tx = await rewardsDistribContract.setSingleMarketRewardsFrequency(0, 30);
+      tx = await rewardsDistribContract.setRewardsFrequencySingleMarket(0, 30);
       tx = await rewardsDistribContract.setRewardsPercentageSingleMarket(0, web3.utils.toWei('0.8'));
       tx = await rewardsDistribContract.setExtProtocolPercentSingleMarket(0, web3.utils.toWei('0.06'));
       tx = await rewardsDistribContract.setBalanceFactorSingleMarket(0, web3.utils.toWei('0.7'));
