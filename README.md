@@ -71,11 +71,11 @@ Limit is 24 KiB for single contract
     <tbody>
         <tr>
             <td>RewardsDistribution</td>
-            <td><code>9.92 KiB</code></td>
+            <td><code>13.07 KiB</code></td>
         </tr>
         <tr>
             <td>RewardsDistributionStorage</td>
-            <td><code>1.26 KiB</code></td>
+            <td><code>1.28 KiB</code></td>
         </tr>
     </tbody>
   </table>
