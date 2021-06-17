@@ -77,5 +77,13 @@ Limit is 24 KiB for single contract
             <td>RewardsDistributionStorage</td>
             <td><code>1.28 KiB</code></td>
         </tr>
+        <tr>
+            <td>StakingRewards</td>
+            <td><code>5.12 KiB</code></td>
+        </tr>
+        <tr>
+            <td>StakingRewardsFactory</td>
+            <td><code>8.50 KiB</code></td>
+        </tr>
     </tbody>
   </table>
