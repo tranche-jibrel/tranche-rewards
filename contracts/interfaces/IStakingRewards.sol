@@ -19,4 +19,14 @@ interface IStakingRewards {
     function withdraw(uint256 amount) external;
     function getReward() external;
     function exit() external;
+
+    function initialize(address _rewardsDistribution,
+            address _rewardsToken,
+            address _stakingToken) external;
+
+    /* ========== EVENTS ========== */
+    event RewardAdded(uint256 reward, uint256 periodFinish);
+    event Staked(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+    event RewardPaid(address indexed user, uint256 reward);
 }

@@ -70,6 +70,14 @@ Limit is 24 KiB for single contract
     </thead>
     <tbody>
         <tr>
+            <td>Markets</td>
+            <td><code>11.54 KiB</code></td>
+        </tr>
+        <tr>
+            <td>MarketsStorage</td>
+            <td><code>1.32 KiB</code></td>
+        </tr>
+        <tr>
             <td>RewardsDistribution</td>
             <td><code>13.07 KiB</code></td>
         </tr>
@@ -79,11 +87,19 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>StakingRewards</td>
-            <td><code>5.12 KiB</code></td>
+            <td><code>5.26 KiB</code></td>
+        </tr>
+        <tr>
+            <td>StakingRewardsStorage</td>
+            <td><code>1.14 KiB</code></td>
         </tr>
         <tr>
             <td>StakingRewardsFactory</td>
-            <td><code>8.50 KiB</code></td>
+            <td><code>9.45 KiB</code></td>
+        </tr>
+        <tr>
+            <td>StakingRewardsFactoryStorage</td>
+            <td><code>1.8 KiB</code></td>
         </tr>
     </tbody>
   </table>

@@ -12,6 +12,7 @@ var TrancheBFDT = artifacts.require("./mocks/TrancheBToken.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
 
 var StakingRewardsFactory = artifacts.require("./StakingRewardsFactory.sol");
+var Markets = artifacts.require("./Markets.sol");
 
 module.exports = async (deployer, network, accounts) => {
   const MYERC20_TOKEN_SUPPLY = new BN(5000000);
@@ -83,9 +84,14 @@ module.exports = async (deployer, network, accounts) => {
     await myTrAFDTinst2.setRewardTokenAddress(myRewardTokeninstance.address, { from: tokenOwner });
     await myTrBFDTinst2.setRewardTokenAddress(myRewardTokeninstance.address, { from: tokenOwner });
 
-    console.log(Date.now() / 1000 | 0)
-    const myStakingRewardsFactoryInstance = await deployer.deploy(StakingRewardsFactory, myRewardTokeninstance.address, Date.now() / 1000 | 0);
+    genesisDate = Date.now() / 1000 | 0
+    console.log(genesisDate)
+    const myStakingRewardsFactoryInstance = await deployProxy(StakingRewardsFactory, [myRewardTokeninstance.address, genesisDate+5], {from: tokenOwner});
     console.log('myStakingRewardsFactoryInstance Deployed: ', myStakingRewardsFactoryInstance.address);
 
+    const myMarketsInstance = await deployProxy(Markets, [myStakingRewardsFactoryInstance.address], { from: tokenOwner });
+    console.log('myMarketsInstance Deployed: ', myMarketsInstance.address);
+
+    await myStakingRewardsFactoryInstance.setMarketAddress(myMarketsInstance.address, {from: tokenOwner});
   } 
 }
