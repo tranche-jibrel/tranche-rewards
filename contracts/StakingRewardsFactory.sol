@@ -67,8 +67,6 @@ contract StakingRewardsFactory is StakingRewardsFactoryStorage {
         IERC20Upgradeable(token).transfer(msg.sender, amount);
     }
 
-
-
     ///// permissionless functions
 
     // call notifyRewardAmount for all staking tokens.

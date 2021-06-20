@@ -33,7 +33,7 @@ let protocolContract, trAFDTContract, trBFDTContract, rewardTokenContract, trAMa
 let stakingRewardsFactoryContract, marketsContract, stakingRewardsTrA, stakingRewardsTrB;
 let owner, user1, user2, user3, user4;
 
-contract('Rewards1', function (accounts) {
+contract('Staking Rewards', function (accounts) {
     const gasPrice = new BN('1');
     const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
     /*
@@ -114,28 +114,25 @@ contract('Rewards1', function (accounts) {
 
     it('mint some tokens from tranche A and B', async function () {
         await trAFDTContract.mint(user1, ether("10000"));
-        console.log("User1 trA tokens: " + web3.utils.fromWei(await trAFDTContract.balanceOf(user1)))
+        expect(web3.utils.fromWei(await trAFDTContract.balanceOf(user1))).to.be.equal("10000")
         await trAFDTContract.mint(user2, ether("20000"));
-        console.log("User2 trA tokens: " + web3.utils.fromWei(await trAFDTContract.balanceOf(user2)))
+        expect(web3.utils.fromWei(await trAFDTContract.balanceOf(user2))).to.be.equal("20000")
         await trAFDTContract.mint(user3, ether("30000"));
-        console.log("User3 trA tokens: " + web3.utils.fromWei(await trAFDTContract.balanceOf(user3)))
+        expect(web3.utils.fromWei(await trAFDTContract.balanceOf(user3))).to.be.equal("30000")
         await trAFDTContract.mint(user4, ether("40000"));
-        console.log("User4 trA tokens: " + web3.utils.fromWei(await trAFDTContract.balanceOf(user4)))
+        expect(web3.utils.fromWei(await trAFDTContract.balanceOf(user4))).to.be.equal("40000")
 
         await trBFDTContract.mint(user1, ether("1000"));
-        console.log("User1 trB tokens: " + web3.utils.fromWei(await trBFDTContract.balanceOf(user1)))
+        expect(web3.utils.fromWei(await trBFDTContract.balanceOf(user1))).to.be.equal("1000")
         await trBFDTContract.mint(user2, ether("2000"));
-        console.log("User2 trB tokens: " + web3.utils.fromWei(await trBFDTContract.balanceOf(user2)))
+        expect(web3.utils.fromWei(await trBFDTContract.balanceOf(user2))).to.be.equal("2000")
         await trBFDTContract.mint(user3, ether("3000"));
-        console.log("User3 trB tokens: " + web3.utils.fromWei(await trBFDTContract.balanceOf(user3)))
+        expect(web3.utils.fromWei(await trBFDTContract.balanceOf(user3))).to.be.equal("3000")
         await trBFDTContract.mint(user4, ether("4000"));
-        console.log("User4 trB tokens: " + web3.utils.fromWei(await trBFDTContract.balanceOf(user4)))
+        expect(web3.utils.fromWei(await trBFDTContract.balanceOf(user4))).to.be.equal("4000")
 
         totASupply = await trAFDTContract.totalSupply();
-        // console.log(web3.utils.fromWei(totASupply))
         trAVal = totASupply * MY_TRANCHE_A_PRICE_NUM / Math.pow(10, 18);
-        // console.log(trAVal.toString())
-        // console.log(totASupply * MY_TRANCHE_A_PRICE_NUM)
         await protocolContract.setTrAValue(0, ether(trAVal.toString()));
         await protocolContract.setTrBValue(0, ether('10000'));
         await protocolContract.setTotalValue(0);
@@ -148,13 +145,15 @@ contract('Rewards1', function (accounts) {
 
     describe('settings', function () {
         it('set tranche in Markets contract', async function () {
+            await marketsContract.setRewardsFactory(stakingRewardsFactoryContract.address);
+
             tx = await marketsContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE,
                 MY_EXT_PROT_RET, 7, web3.utils.toWei("1", "ether"), {
                     from: owner
                 });
 
-            console.log("Total TVL: " + (await marketsContract.getAllMarketsTVL()).toString())
-            console.log("Total TVL in Market0: " + (await marketsContract.getTrancheMarketTVL(0)).toString())
+            console.log("Total TVL: " + web3.utils.fromWei((await marketsContract.getAllMarketsTVL()).toString()))
+            console.log("Total TVL in Market0: " + web3.utils.fromWei((await marketsContract.getTrancheMarketTVL(0)).toString()))
 
             await marketsContract.refreshSliceSpeeds();
 
@@ -170,8 +169,6 @@ contract('Rewards1', function (accounts) {
         });
 
         it('read values from tranches', async function () {
-            console.log("Tranche A: " + await marketsContract.getATrancheMarket(0))
-            console.log("Tranche A: " + await marketsContract.getBTrancheMarket(0))
             trARet = await marketsContract.getTrancheAReturns(0);
             console.log("tranche A return: " + web3.utils.fromWei(trARet) * 100 + " %");
             trBRet = await marketsContract.getTrancheBReturns(0);
@@ -195,65 +192,69 @@ contract('Rewards1', function (accounts) {
             stkAddressA = await stakingRewardsFactoryContract.stakingTokens(0);
             stakingAAddress = await marketsContract.getATrancheStaking(0)
             stakingRewardsTrA = await StakingRewards.at(stakingAAddress)
-            // stakingRewardsTrA = await StakingRewards.at(stkAddressA)
-            console.log("Staking Contract for Tranche A: " + stakingRewardsTrA.address);
             expect(stkAddressA).to.be.equal(trAMarket)
             
             await stakingRewardsFactoryContract.deploy(0, false, trBMarket, ether("100"), duration, {from: owner});
             stkAddressB = await stakingRewardsFactoryContract.stakingTokens(1);
             stakingBAddress = await marketsContract.getBTrancheStaking(0)
             stakingRewardsTrB = await StakingRewards.at(stakingBAddress)
-            console.log("Staking Contract for Tranche B: " + stakingRewardsTrB.address);
             expect(stkAddressB).to.be.equal(trBMarket)
 
             res = await stakingRewardsFactoryContract.stakingRewardsInfoByStakingToken(stkAddressA)
-            console.log(res[0].toString(), res[1].toString(), res[2].toString())
+            console.log("TrA Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
             res = await stakingRewardsFactoryContract.stakingRewardsInfoByStakingToken(stkAddressB)
-            console.log(res[0].toString(), res[1].toString(), res[2].toString())
+            console.log("TrB Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
         });
 
         it('stake tranche tokens in Staking Contracts for A & B', async function () {
-            stkAmount = await trAFDTContract.balanceOf(user1);
-            await trAFDTContract.approve(stakingRewardsTrA.address, stkAmount, {from: user1})
-            await stakingRewardsTrA.stake(stkAmount, {from: user1})
-            console.log("Staking Contract for Tranche A total supply: " + await stakingRewardsTrA.totalSupply());
+            stkAmount1 = await trAFDTContract.balanceOf(user1);
+            await trAFDTContract.approve(stakingRewardsTrA.address, stkAmount1, {from: user1})
+            await stakingRewardsTrA.stake(stkAmount1, {from: user1})
+            expect(web3.utils.fromWei(await stakingRewardsTrA.balanceOf(user1))).to.be.equal(web3.utils.fromWei(stkAmount1))
+            expect(web3.utils.fromWei(await stakingRewardsTrA.totalSupply())).to.be.equal(web3.utils.fromWei(stkAmount1))
 
-            stkAmount = await trAFDTContract.balanceOf(user2);
-            await trAFDTContract.approve(stakingRewardsTrA.address, stkAmount, {from: user2})
-            await stakingRewardsTrA.stake(stkAmount, {from: user2})
-            console.log("Staking Contract for Tranche A total supply: " + await stakingRewardsTrA.totalSupply());
+            stkAmount2 = await trAFDTContract.balanceOf(user2);
+            await trAFDTContract.approve(stakingRewardsTrA.address, stkAmount2, {from: user2})
+            await stakingRewardsTrA.stake(stkAmount2, {from: user2})
+            expect(web3.utils.fromWei(await stakingRewardsTrA.balanceOf(user2))).to.be.equal(web3.utils.fromWei(stkAmount2))
+            totAmount = +web3.utils.fromWei(stkAmount1) + +web3.utils.fromWei(stkAmount2)
+            expect(web3.utils.fromWei(await stakingRewardsTrA.totalSupply())).to.be.equal(totAmount.toString())
 
-            stkAmount = await trBFDTContract.balanceOf(user1);
-            await trBFDTContract.approve(stakingRewardsTrB.address, stkAmount, {from: user1})
-            await stakingRewardsTrB.stake(stkAmount, {from: user1})
-            console.log("Staking Contract for Tranche B total supply: " + await stakingRewardsTrB.totalSupply());
+            stkAmount1 = await trBFDTContract.balanceOf(user1);
+            await trBFDTContract.approve(stakingRewardsTrB.address, stkAmount1, {from: user1})
+            await stakingRewardsTrB.stake(stkAmount1, {from: user1})
+            expect(web3.utils.fromWei(await stakingRewardsTrB.balanceOf(user1))).to.be.equal(web3.utils.fromWei(stkAmount1))
+            expect(web3.utils.fromWei(await stakingRewardsTrB.totalSupply())).to.be.equal(web3.utils.fromWei(stkAmount1))
 
-            stkAmount = await trBFDTContract.balanceOf(user2);
-            await trBFDTContract.approve(stakingRewardsTrB.address, stkAmount, {from: user2})
-            await stakingRewardsTrB.stake(stkAmount, {from: user2})
-            console.log("Staking Contract for Tranche B total supply: " + await stakingRewardsTrB.totalSupply());
+            stkAmount2 = await trBFDTContract.balanceOf(user2);
+            await trBFDTContract.approve(stakingRewardsTrB.address, stkAmount2, {from: user2})
+            await stakingRewardsTrB.stake(stkAmount2, {from: user2})
+            expect(web3.utils.fromWei(await stakingRewardsTrB.balanceOf(user2))).to.be.equal(web3.utils.fromWei(stkAmount2))
+            totAmount = +web3.utils.fromWei(stkAmount1) + +web3.utils.fromWei(stkAmount2)
+            expect(web3.utils.fromWei(await stakingRewardsTrB.totalSupply())).to.be.equal(totAmount.toString())
 
-            console.log("User1 TrA tokens: " + web3.utils.fromWei((await trAFDTContract.balanceOf(user1)).toString()))
-            console.log("User2 TrA tokens: " + web3.utils.fromWei((await trAFDTContract.balanceOf(user2)).toString()))
-            console.log("User1 TrB tokens: " + web3.utils.fromWei((await trBFDTContract.balanceOf(user1)).toString()))
-            console.log("User2 TrB tokens: " + web3.utils.fromWei((await trBFDTContract.balanceOf(user2)).toString()))
-
+            expect(web3.utils.fromWei(await trAFDTContract.balanceOf(user1))).to.be.equal("0")
+            expect(web3.utils.fromWei(await trAFDTContract.balanceOf(user2))).to.be.equal("0")
+            expect(web3.utils.fromWei(await trBFDTContract.balanceOf(user1))).to.be.equal("0")
+            expect(web3.utils.fromWei(await trBFDTContract.balanceOf(user2))).to.be.equal("0")
+            
             await rewardTokenContract.transfer(stakingRewardsFactoryContract.address, ether("1000"), {from: owner})
+            expect(web3.utils.fromWei(await rewardTokenContract.balanceOf(stakingRewardsFactoryContract.address))).to.be.equal("1000")
             await stakingRewardsFactoryContract.notifyRewardAmounts()
 
             res = await stakingRewardsFactoryContract.stakingRewardsInfoByStakingToken(stkAddressA)
-            console.log(res[0].toString(), res[1].toString(), res[2].toString())
+            console.log("TrA Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
             res = await stakingRewardsFactoryContract.stakingRewardsInfoByStakingToken(stkAddressB)
-            console.log(res[0].toString(), res[1].toString(), res[2].toString())
-            console.log((await stakingRewardsTrA.lastUpdateTime()).toString())
-            console.log((await stakingRewardsTrB.lastUpdateTime()).toString())
+            console.log("TrB Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
+            expect((await stakingRewardsTrA.lastUpdateTime()).toString()).to.be.equal((Date.now() / 1000 | 0).toString())
+            expect((await stakingRewardsTrB.lastUpdateTime()).toString()).to.be.equal((Date.now() / 1000 | 0).toString())
 
-            console.log((await rewardTokenContract.balanceOf(stakingRewardsTrA.address)).toString())
-            console.log((await rewardTokenContract.balanceOf(stakingRewardsTrB.address)).toString())
+            expect(web3.utils.fromWei(await rewardTokenContract.balanceOf(stakingRewardsTrA.address))).to.be.equal("70")
+            expect(web3.utils.fromWei(await rewardTokenContract.balanceOf(stakingRewardsTrB.address))).to.be.equal("100")
         });
     });
 
-    describe('after some time...', function () {
+    describe('Exiting Staking Contracts', function () {
         let balanceA1, balanceA2, balanceB1, balanceB2;
 
         it('time passes...', async function () {
@@ -266,8 +267,6 @@ contract('Rewards1', function (accounts) {
         });
 
         it('Read values in staking contracts', async function () {
-            console.log((await stakingRewardsTrA.lastUpdateTime()).toString())
-            console.log((await stakingRewardsTrB.lastUpdateTime()).toString())
             console.log("Reward per Token TrA: " + web3.utils.fromWei((await stakingRewardsTrA.rewardPerToken()).toString()))
             console.log("Reward per Token TrB: " + web3.utils.fromWei((await stakingRewardsTrB.rewardPerToken()).toString()))
 
@@ -280,7 +279,6 @@ contract('Rewards1', function (accounts) {
             balanceB2 = await stakingRewardsTrB.earned(user2)
             console.log("User1 Rewards TrB: " + web3.utils.fromWei(balanceB1.toString()))
             console.log("User2 Rewards TrB: " + web3.utils.fromWei(balanceB2.toString()))
-            
         });
 
         it('Exit from staking contracts', async function () {
@@ -297,7 +295,23 @@ contract('Rewards1', function (accounts) {
             console.log("User2 TrB tokens: " + web3.utils.fromWei((await trBFDTContract.balanceOf(user2)).toString()))
             console.log("User1 Rewards TrB withdrawn: " + web3.utils.fromWei((await rewardTokenContract.balanceOf(user1)).toString()))
             console.log("User2 Rewards TrB withdrawn: " + web3.utils.fromWei((await rewardTokenContract.balanceOf(user2)).toString()))
-            
+
+            expect(web3.utils.fromWei((await rewardTokenContract.balanceOf(stakingRewardsFactoryContract.address)).toString())).to.be.equal("830"); // 1000 - 70 - 100
+            // expect(web3.utils.fromWei((await rewardTokenContract.balanceOf(stakingRewardsTrA.address)).toString())).to.be.lt("70"); // 70 - something
+            // expect(web3.utils.fromWei((await rewardTokenContract.balanceOf(stakingRewardsTrB.address)).toString())).to.be.lt("100"); // 100 - something
+            stkBalA = await rewardTokenContract.balanceOf(stakingRewardsTrA.address)
+            console.log("Undistrib tokens from Staking Contract TrA: " + web3.utils.fromWei(stkBalA))
+            stkBalB = await rewardTokenContract.balanceOf(stakingRewardsTrB.address)
+            console.log("Undistrib tokens from Staking Contract TrB: " + web3.utils.fromWei(stkBalB))
+        });
+
+        it('call notify rewards amount again before period finish', async function () {
+            await stakingRewardsFactoryContract.notifyRewardAmounts()
+
+            res = await stakingRewardsFactoryContract.stakingRewardsInfoByStakingToken(stkAddressA)
+            console.log("TrA Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
+            res = await stakingRewardsFactoryContract.stakingRewardsInfoByStakingToken(stkAddressB)
+            console.log("TrB Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
         });
     });
 
