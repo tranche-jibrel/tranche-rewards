@@ -51,16 +51,15 @@ All tests (ganache required: npx ganache-cli --deterministic -l 12000000), gas r
 
 1 test only (ganache required: npx ganache-cli --deterministic -l 12000000), gas reporter included:
 
-    `truffle test ./test/Rewards2.test.js`   
+    `truffle test ./test/IncentiveRewards.test.js`   
 
 Solidity Coverage (no ganache required):
 
-    `truffle run coverage --network development`   
+    `truffle run coverage --network development --file="<filename>"`   
     
      
 
 ## Contracts Size (main contracts, no interfaces, no test contracts)
-TO BE DONE with new contracts
 Limit is 24 KiB for single contract
 <table>
     <thead>
