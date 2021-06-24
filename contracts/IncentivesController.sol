@@ -1,40 +1,114 @@
 // SPDX-License-Identifier: MIT
 /**
  * Created on 2021-04-06
- * @summary: Markets contract
+ * @summary: Incentive Controller contract
  * @author: Jibrel Team
  */
 pragma solidity ^0.8.0;
 
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./MarketsStorage.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "./IncentivesControllerStorage.sol";
 import "./interfaces/IProtocol.sol";
-import "./interfaces/IMarkets.sol";
+import "./interfaces/IIncentivesController.sol";
 import "./interfaces/IJTrancheTokens.sol";
 import "./math/SafeMathInt.sol";
 
-
-contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
-    using SafeMath for uint256;
+contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage, IIncentivesController, ReentrancyGuardUpgradeable {
+    using SafeMathUpgradeable for uint256;
     using SafeMathInt for int256;
 
     /**
      * @dev initialize contract
+     * @param _token reward token address (SLICE or others)
      */
-    function initialize (address _rFactory) public initializer() {
+    function initialize (address _token, uint256 _stakingRewardsGenesis) public initializer() {
+        require(_stakingRewardsGenesis >= block.timestamp, 'IncentiveRewardsFactory::constructor: genesis too soon');
         OwnableUpgradeable.__Ownable_init();
-        rewardFactoryAddress = _rFactory;
+        rewardsToken = _token;
+        stakingRewardsGenesis = _stakingRewardsGenesis;
     }
 
-    modifier onlyRewardsFactory() {
-        require(msg.sender == rewardFactoryAddress, "Markets: Caller is not Rewards factory contract");
+    modifier updateRewardPerMarketTrancheA(uint256 _idxMarket, address account) {
+        trancheARewardsInfo[_idxMarket].rewardPerTokenStored = rewardPerTrAToken(_idxMarket);
+        trancheARewardsInfo[_idxMarket].lastUpdateTime = lastTimeTrARewardApplicable(_idxMarket);
+        if (account != address(0)) {
+            trARewards[_idxMarket][account] = trAEarned(_idxMarket, account);
+            userRewardPerTokenTrAPaid[_idxMarket][account] = trancheARewardsInfo[_idxMarket].rewardPerTokenStored;
+        }
         _;
     }
 
-    function setRewardsFactory(address _rFactory) public onlyOwner {
-        rewardFactoryAddress = _rFactory;
+    modifier updateRewardPerMarketTrancheB(uint256 _idxMarket, address account) {
+        trancheBRewardsInfo[_idxMarket].rewardPerTokenStored = rewardPerTrBToken(_idxMarket);
+        trancheBRewardsInfo[_idxMarket].lastUpdateTime = lastTimeTrBRewardApplicable(_idxMarket);
+        if (account != address(0)) {
+            trBRewards[_idxMarket][account] = trBEarned(_idxMarket, account);
+            userRewardPerTokenTrBPaid[_idxMarket][account] = trancheBRewardsInfo[_idxMarket].rewardPerTokenStored;
+        }
+        _;
+    }
+
+    function lastTimeTrARewardApplicable(uint256 _idxMarket) public view returns (uint256) {
+        return MathUpgradeable.min(block.timestamp, trancheARewardsInfo[_idxMarket].periodFinish);
+    }
+
+    function lastTimeTrBRewardApplicable(uint256 _idxMarket) public view returns (uint256) {
+        return MathUpgradeable.min(block.timestamp, trancheBRewardsInfo[_idxMarket].periodFinish);
+    }
+
+    function rewardPerTrAToken(uint256 _idxMarket) public view returns (uint256) {
+        uint256 _totalSupply = IERC20Upgradeable(availableMarkets[_idxMarket].aTranche).totalSupply();
+        return trancheARewardsInfo[_idxMarket].rewardPerTokenStored.add(lastTimeTrARewardApplicable(_idxMarket)
+            .sub(trancheARewardsInfo[_idxMarket].lastUpdateTime)
+            .mul(trancheARewardsInfo[_idxMarket].rewardRate).mul(1e18).div(_totalSupply));
+    }
+
+    function rewardPerTrBToken(uint256 _idxMarket) public view returns (uint256) {
+        uint256 _totalSupply = IERC20Upgradeable(availableMarkets[_idxMarket].bTranche).totalSupply();
+        return trancheBRewardsInfo[_idxMarket].rewardPerTokenStored.add(lastTimeTrBRewardApplicable(_idxMarket)
+            .sub(trancheBRewardsInfo[_idxMarket].lastUpdateTime)
+            .mul(trancheBRewardsInfo[_idxMarket].rewardRate).mul(1e18).div(_totalSupply));
+    }
+
+    function trAEarned(uint256 _idxMarket, address account) public view returns (uint256) {
+        return IERC20Upgradeable(availableMarkets[_idxMarket].aTranche).balanceOf(account)
+            .mul(rewardPerTrAToken(_idxMarket).sub(userRewardPerTokenTrAPaid[_idxMarket][account])).div(1e18).add(trARewards[_idxMarket][account]);
+    }
+
+    function trBEarned(uint256 _idxMarket, address account) public view returns (uint256) {
+        return IERC20Upgradeable(availableMarkets[_idxMarket].bTranche).balanceOf(account)
+            .mul(rewardPerTrBToken(_idxMarket).sub(userRewardPerTokenTrBPaid[_idxMarket][account])).div(1e18).add(trBRewards[_idxMarket][account]);  
+    }
+
+    function getTrAReward(uint256 _idxMarket) public updateRewardPerMarketTrancheA(_idxMarket, msg.sender) {
+        uint256 reward = trARewards[_idxMarket][msg.sender];
+        if (reward > 0) {
+            trARewards[_idxMarket][msg.sender] = 0;
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsToken), msg.sender, reward);
+            emit RewardPaid(msg.sender, reward);
+        }
+    }
+
+    function getTrBReward(uint256 _idxMarket) public nonReentrant updateRewardPerMarketTrancheB(_idxMarket, msg.sender) {
+        uint256 reward = trBRewards[_idxMarket][msg.sender];
+        if (reward > 0) {
+            trBRewards[_idxMarket][msg.sender] = 0;
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsToken), msg.sender, reward);
+            emit RewardPaid(msg.sender, reward);
+        }
+    }
+
+    /**
+     * @dev set the address of the reward token
+     * @param _token rewards token address (SLICE or other)
+     */
+    function setRewardTokenAddress(address _token) external onlyOwner {
+        require(_token != address(0), "TokenRewards: address not allowed");
+        rewardsToken = _token;
     }
 
     /**
@@ -44,7 +118,7 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
      * @param _balFactor balance factor, meaning percentage on tranche B for asintotic values (scaled by 1e18)
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
-     * @param _rewardsFreq rewards frequency in days
+     * @param _rewardsDuration rewards duration (in seconds)
      * @param _underlyingPrice initial underlying price, in common currency (scaled by 1e18)
      */
     function addTrancheMarket(address _protocol, 
@@ -52,11 +126,11 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
             uint256 _balFactor,
             uint256 _marketPercentage,
             uint256 _extProtReturn,
-            uint256 _rewardsFreq,
+            uint256 _rewardsDuration,
             uint256 _underlyingPrice) external onlyOwner{
         require(_balFactor <= uint256(1e18), "TokenRewards: balance factor too high");
         require(_marketPercentage <= uint256(1e18), "TokenRewards: market percentage too high");
-        require(_rewardsFreq > 0 && _rewardsFreq < uint256(366), "TokenRewards: rewards frequency too high");
+        require(_rewardsDuration > 0 && _rewardsDuration < uint256(366), "TokenRewards: rewards frequency too high");
         availableMarkets[marketsCounter].protocol = _protocol;
         availableMarkets[marketsCounter].protocolTrNumber = _protocolTrNumber;
         ( , , address trAAddress, address trBAddress) = IProtocol(_protocol).trancheAddresses(_protocolTrNumber);
@@ -68,32 +142,17 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         availableMarkets[marketsCounter].enabled = true;
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
-        availableMarketsRewards[marketsCounter].rewardsFrequency = _rewardsFreq * 1 days; // expressed in days
+        availableMarketsRewards[marketsCounter].rewardsDuration = _rewardsDuration; // in seconds
         availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice; // scaled in 1e18
         
         emit NewMarketAdded(marketsCounter, availableMarkets[marketsCounter].protocol, availableMarkets[marketsCounter].protocolTrNumber,
             availableMarkets[marketsCounter].balanceFactor, availableMarkets[marketsCounter].extProtocolPercentage,
-            availableMarketsRewards[marketsCounter].marketRewardsPercentage, availableMarketsRewards[marketsCounter].rewardsFrequency, block.number);
+            availableMarketsRewards[marketsCounter].marketRewardsPercentage, availableMarketsRewards[marketsCounter].rewardsDuration, block.number);
 
         marketsCounter = marketsCounter.add(1);
     }
 
-    function setStakingATrancheMarket(uint256 _idxMarket, address _staking) external override onlyRewardsFactory {
-        availableMarkets[_idxMarket].stakingATranche = _staking;
-    }
-
-    function setStakingBTrancheMarket(uint256 _idxMarket, address _staking) external override onlyRewardsFactory {
-        availableMarkets[_idxMarket].stakingBTranche = _staking;
-    }
-
-    function getATrancheStaking(uint256 _idxMarket) external view override returns(address) {
-        return availableMarkets[_idxMarket].stakingATranche;
-    }
-
-    function getBTrancheStaking(uint256 _idxMarket) external view override returns(address) {
-        return availableMarkets[_idxMarket].stakingBTranche;
-    }
-
+    
     function getATrancheMarket(uint256 _idxMarket) external view override returns(address) {
         return availableMarkets[_idxMarket].aTranche;
     }
@@ -112,7 +171,7 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     }
 
     /**
-     * @dev enable or disable all markets
+     * @dev enable or disable a single market
      * @param _enables true or false array
      */
     function enableAllMarket(bool[] memory _enables) external onlyOwner {
@@ -125,11 +184,11 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     /**
      * @dev set reward frequency for a single market
      * @param _idxMarket market index
-     * @param _rewardsFreq rewards frequency (in days)
+     * @param _rewardsDuration rewards frequency (in seconds)
      */
-    function setRewardsFrequencySingleMarket(uint256 _idxMarket, uint256 _rewardsFreq) external onlyOwner {
-        require(_rewardsFreq > 0 && _rewardsFreq <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
-        availableMarketsRewards[_idxMarket].rewardsFrequency = _rewardsFreq * 1 days;
+    function setRewardsFrequencySingleMarket(uint256 _idxMarket, uint256 _rewardsDuration) external onlyOwner {
+        require(_rewardsDuration > 0 && _rewardsDuration <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
+        availableMarketsRewards[_idxMarket].rewardsDuration = _rewardsDuration;
     }
 
     /**
@@ -139,7 +198,7 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     function setRewardsFrequencyAllMarkets(uint256[] memory _rewardsFreqs) external onlyOwner {
         require(_rewardsFreqs.length ==  marketsCounter, "TokenRewards: rewards frequency array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
-            availableMarketsRewards[i].rewardsFrequency = _rewardsFreqs[i] * 1 days;
+            availableMarketsRewards[i].rewardsDuration = _rewardsFreqs[i] * 1 days;
         }
     }
 
@@ -340,6 +399,110 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
             marketShare = 0;
         return marketShare;
     }
+/*
+    /**
+     * @dev distribute an amount of rewards tokens to all available and enabled markets, splitting the amount between all markets and tranches
+     * @param _amount amount of tokens to distribute to this market (tranche A + tranche B)
+     */
+/*    function distributeAllMarketsFunds(uint256 _amount) public {
+        require(_amount > 0, "TokenRewards: no tokens");
+        require(marketsCounter > 0, "TokenRewards: no markets");
+        SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardsToken), msg.sender, address(this), _amount);
+        for(uint256 i = 0; i < marketsCounter; i++) {
+            if (availableMarketsRewards[i].marketRewardsPercentage > 0) {
+                uint256 trRewardsAmount = _amount.mul(availableMarketsRewards[i].marketRewardsPercentage).div(1e18);
+                distributeSingleMarketsFundsInternal(i, trRewardsAmount);
+            }
+        }
+    }
+
+    /**
+     * @dev internal function
+     * @dev distribute an amount of rewards tokens to an enabled market, splitting the amount between tranche A & B
+     * @param _idxMarket market index
+     * @param _amount amount of tokens to distribute to this market (tranche A + tranche B)
+     */
+/*    function distributeSingleMarketsFundsInternal(uint256 _idxMarket, uint256 _amount) internal {
+        if (_amount > 0 && _idxMarket < marketsCounter && availableMarkets[_idxMarket].enabled){
+            uint256 trBPercent = uint256(getTrancheBRewardsPercentage(_idxMarket));
+            uint256 trBAmount = _amount.mul(trBPercent).div(1e18);
+            uint256 trAAmount = _amount.sub(trBAmount);
+            availableMarketsRewards[_idxMarket].trancheBRewardsAmount = trBAmount;
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsToken), availableMarkets[_idxMarket].bTranche, trBAmount);
+
+            availableMarketsRewards[_idxMarket].trancheARewardsAmount = trAAmount;
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsToken), availableMarkets[_idxMarket].aTranche, trAAmount);
+
+            availableMarkets[_idxMarket].updateBlock = block.number;
+
+            emit FundsDistributed(_idxMarket, trAAmount, trBAmount, block.number);
+        }
+    }
+
+    /**
+     * @dev distribute an amount of rewards tokens to an available and enabled market, splitting the amount between tranche A & B
+     * @param _idxMarket market index
+     * @param _amount amount of tokens to distribute to this market (tranche A + tranche B)
+     */
+/*    function distributeSingleMarketsFunds(uint256 _idxMarket, uint256 _amount) external {
+        require(_amount > 0, "TokenRewards: no tokens");
+        require(marketsCounter > _idxMarket, "TokenRewards: market not found");
+        require(availableMarkets[_idxMarket].enabled, "TokenRewards: market disabled");
+
+        uint256 trBPercent = uint256(getTrancheBRewardsPercentage(_idxMarket));
+        uint256 trBAmount = _amount.mul(trBPercent).div(1e18);
+        uint256 trAAmount = _amount.sub(trBAmount);
+        availableMarketsRewards[_idxMarket].trancheBRewardsAmount = trBAmount;
+        SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardsToken), msg.sender, availableMarkets[_idxMarket].bTranche, trBAmount);
+
+        availableMarketsRewards[_idxMarket].trancheARewardsAmount = trAAmount;
+        SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardsToken), msg.sender, availableMarkets[_idxMarket].aTranche, trAAmount);
+
+        availableMarkets[_idxMarket].updateBlock = block.number;
+
+        emit FundsDistributed(_idxMarket, trAAmount, trBAmount, block.number);
+    }
+
+    /**
+     * @dev distribute rewards tokens to users in a single market
+     * @param _idxMarket market index
+     */
+/*    function distributeRewardsTokenSingleMarket(uint256 _idxMarket) public {
+        require(marketsCounter > _idxMarket, "TokenRewards: market not found");
+        if (availableMarkets[_idxMarket].enabled){
+            if (availableMarketsRewards[_idxMarket].trancheARewardsAmount > 0) {
+                IJTrancheTokens(availableMarkets[_idxMarket].aTranche).updateFundsReceived();
+                uint256 trATVL = getTrancheAMarketTVL(_idxMarket);
+                uint256 distribTimes = 365 days / availableMarketsRewards[_idxMarket].rewardsDuration;
+                availableMarketsRewards[_idxMarket].rewardsTrAAPY = 
+                        availableMarketsRewards[_idxMarket].trancheARewardsAmount.mul(distribTimes).mul(1e18).div(trATVL); // scaled by 1e18
+                availableMarketsRewards[_idxMarket].trancheARewardsAmount = 0;
+            }
+            if (availableMarketsRewards[_idxMarket].trancheBRewardsAmount > 0) {
+                IJTrancheTokens(availableMarkets[_idxMarket].bTranche).updateFundsReceived();
+                uint256 trBTVL = getTrancheBMarketTVL(_idxMarket);
+                uint256 distribTimes = 365 days / availableMarketsRewards[_idxMarket].rewardsDuration;
+                availableMarketsRewards[_idxMarket].rewardsTrBAPY = 
+                        availableMarketsRewards[_idxMarket].trancheBRewardsAmount.mul(distribTimes).mul(1e18).div(trBTVL); // scaled by 1e18
+                availableMarketsRewards[_idxMarket].trancheBRewardsAmount = 0;
+            }
+
+            availableMarkets[_idxMarket].updateBlock = block.number;
+
+            emit RewardsDistributedAPY(_idxMarket, availableMarketsRewards[_idxMarket].rewardsTrAAPY, availableMarketsRewards[_idxMarket].rewardsTrBAPY, block.number);
+        }
+    }
+
+    /**
+     * @dev distribute rewards tokens to users in all markets
+     */
+/*    function distributeRewardsTokenAllMarkets() external {
+        require(marketsCounter > 0, "TokenRewards: no markets");
+        for(uint256 i = 0; i < marketsCounter; i++) {
+            distributeRewardsTokenSingleMarket(i);
+        }
+    }
+*/
 
     function getRewardsAPYSingleMarketTrancheA(uint256 _idxMarket) external view returns(uint256 rewardsAPY) {
         rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrAAPY;
@@ -350,6 +513,7 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrBAPY;
         return rewardsAPY;
     }
+
 
 /*************************************** MODEL ************************************************/
     /**
