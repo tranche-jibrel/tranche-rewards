@@ -60,6 +60,7 @@ Solidity Coverage (no ganache required):
      
 
 ## Contracts Size (main contracts, no interfaces, no test contracts)
+TO BE DONE with new contracts
 Limit is 24 KiB for single contract
 <table>
     <thead>
@@ -70,36 +71,40 @@ Limit is 24 KiB for single contract
     </thead>
     <tbody>
         <tr>
+            <td>IncentiveRewards</td>
+            <td><code>4.18 KiB</code></td>
+        </tr>
+        <tr>
+            <td>IncentiveRewardsStorage</td>
+            <td><code>1.04 KiB</code></td>
+        </tr>
+        <tr>
+            <td>IncentiveRewardsFactory</td>
+            <td><code>8.83 KiB</code></td>
+        </tr>
+        <tr>
+            <td>IncentiveRewardsFactoryStorage</td>
+            <td><code>1.08 KiB</code></td>
+        </tr>
+        <tr>
+            <td>IncentivesController</td>
+            <td><code>14.14 KiB</code></td>
+        </tr>
+        <tr>
+            <td>IncentivesControllerStorage</td>
+            <td><code>1.93 KiB</code></td>
+        </tr>
+        <tr>
             <td>Markets</td>
-            <td><code>11.54 KiB</code></td>
+            <td><code>11.65 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsStorage</td>
             <td><code>1.32 KiB</code></td>
         </tr>
         <tr>
-            <td>RewardsDistribution</td>
-            <td><code>13.07 KiB</code></td>
-        </tr>
-        <tr>
-            <td>RewardsDistributionStorage</td>
-            <td><code>1.28 KiB</code></td>
-        </tr>
-        <tr>
-            <td>StakingRewards</td>
-            <td><code>5.26 KiB</code></td>
-        </tr>
-        <tr>
-            <td>StakingRewardsStorage</td>
-            <td><code>1.14 KiB</code></td>
-        </tr>
-        <tr>
-            <td>StakingRewardsFactory</td>
-            <td><code>9.45 KiB</code></td>
-        </tr>
-        <tr>
-            <td>StakingRewardsFactoryStorage</td>
-            <td><code>1.8 KiB</code></td>
+            <td>Model</td>
+            <td><code>2.02 KiB</code></td>
         </tr>
     </tbody>
   </table>
