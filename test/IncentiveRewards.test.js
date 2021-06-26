@@ -33,7 +33,7 @@ let protocolContract, trAFDTContract, trBFDTContract, rewardTokenContract, trAMa
 let incentiveRewardsFactoryContract, marketsContract, stakingRewardsTrA, stakingRewardsTrB;
 let owner, user1, user2, user3, user4;
 
-contract('Staking Rewards', function (accounts) {
+contract('Incentive Rewards', function (accounts) {
     const gasPrice = new BN('1');
     const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
     /*

@@ -47,11 +47,11 @@ contract IncentiveRewardsFactory is IncentiveRewardsFactoryStorage {
         
         if (_ATranche) {
             IMarkets(marketsAddress).setStakingATrancheMarket(_idxMarket,  info.stakingRewards);
-            stakingTokenTranches[ info.stakingRewards] = IMarkets(marketsAddress).getATrancheMarket(_idxMarket);
+            stakingTokenTranches[info.stakingRewards] = IMarkets(marketsAddress).getATrancheMarket(_idxMarket);
         }
         else {
             IMarkets(marketsAddress).setStakingBTrancheMarket(_idxMarket,  info.stakingRewards);
-            stakingTokenTranches[ info.stakingRewards] = IMarkets(marketsAddress).getBTrancheMarket(_idxMarket);
+            stakingTokenTranches[info.stakingRewards] = IMarkets(marketsAddress).getBTrancheMarket(_idxMarket);
         }
     }
 
