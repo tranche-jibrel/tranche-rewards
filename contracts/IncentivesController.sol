@@ -14,7 +14,7 @@ import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "./IncentivesControllerStorage.sol";
 import "./interfaces/IProtocol.sol";
 import "./interfaces/IIncentivesController.sol";
-import "./interfaces/IMarketsHelper.sol";
+import "./interfaces/IMarketHelper.sol";
 import "./math/SafeMathInt.sol";
 
 contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage, IIncentivesController, ReentrancyGuardUpgradeable {
@@ -24,13 +24,14 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
     /**
      * @dev initialize contract
      * @param _token reward token address (SLICE or others)
+     * @param _mktHelper Address of markets helper contract
      */
-    function initialize (address _token, address _mktHelper, uint256 _stakingRewardsGenesis) public initializer() {
-        require(_stakingRewardsGenesis >= block.timestamp, 'IncentiveRewardsFactory::constructor: genesis too soon');
+    function initialize (address _token, address _mktHelper) public initializer() {
+        // require(_stakingRewardsGenesis >= block.timestamp, 'IncentiveRewardsFactory::constructor: genesis too soon');
         OwnableUpgradeable.__Ownable_init();
         rewardsTokenAddress = _token;
         mktHelperAddress = _mktHelper;
-        stakingRewardsGenesis = _stakingRewardsGenesis;
+        // stakingRewardsGenesis = _stakingRewardsGenesis;
     }
 
     /* ========== MODIFIERS ========== */
@@ -167,7 +168,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                tmpMarketVal = IMarketsHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
                 allMarketTVL = allMarketTVL.add(tmpMarketVal);
             }
         }
@@ -188,7 +189,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
             uint256 _underPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
-            uint256 trancheVal = IMarketsHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
             marketShare = trancheVal.mul(1e18).div(totalValue);
         } else 
             marketShare = 0;
@@ -453,7 +454,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             uint256 _extProtRet = availableMarkets[_idxMarket].extProtocolPercentage;
             uint256 _balFactor = availableMarkets[_idxMarket].balanceFactor;
             uint256 trBPercent = 
-                uint256(IMarketsHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _extProtRet, _balFactor));
+                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _extProtRet, _balFactor));
             uint256 trBAmount = _rewardAmount.mul(trBPercent).div(1e18);
             uint256 trAAmount = _rewardAmount.sub(trBAmount);
 
@@ -516,11 +517,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         require(block.timestamp.add(_rewardsDuration) >= trancheARewardsInfo[_idxMarket].periodFinish, "IncentiveController: Cannot reduce existing period");
         
         if (block.timestamp >= trancheARewardsInfo[_idxMarket].periodFinish) {
+            availableMarketsRewards[_idxMarket].trancheARewardsAmount = _rewardAmount;
             trancheARewardsInfo[_idxMarket].rewardRate = _rewardAmount.div(_rewardsDuration);
         } else {
             uint256 remaining = trancheARewardsInfo[_idxMarket].periodFinish.sub(block.timestamp);
             uint256 leftover = remaining.mul(trancheARewardsInfo[_idxMarket].rewardRate);
             trancheARewardsInfo[_idxMarket].rewardRate = _rewardAmount.add(leftover).div(_rewardsDuration);
+            availableMarketsRewards[_idxMarket].trancheARewardsAmount = leftover.add(_rewardAmount);
         }
 
         // Ensure the provided reward amount is not more than the balance in the contract.
@@ -548,11 +551,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         require(block.timestamp.add(_rewardsDuration) >= trancheBRewardsInfo[_idxMarket].periodFinish, "IncentiveController: Cannot reduce existing period");
         
         if (block.timestamp >= trancheBRewardsInfo[_idxMarket].periodFinish) {
+            availableMarketsRewards[_idxMarket].trancheBRewardsAmount = _rewardAmount;
             trancheBRewardsInfo[_idxMarket].rewardRate = _rewardAmount.div(_rewardsDuration);
         } else {
             uint256 remaining = trancheBRewardsInfo[_idxMarket].periodFinish.sub(block.timestamp);
             uint256 leftover = remaining.mul(trancheBRewardsInfo[_idxMarket].rewardRate);
             trancheBRewardsInfo[_idxMarket].rewardRate = _rewardAmount.add(leftover).div(_rewardsDuration);
+            availableMarketsRewards[_idxMarket].trancheBRewardsAmount = leftover.add(_rewardAmount);
         }
 
         // Ensure the provided reward amount is not more than the balance in the contract.
@@ -627,7 +632,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                _mktTVL = IMarketsHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
                 // uint256 _mktTVLtmpMarketVal = _mktTVL.mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
                 uint256 percentTVL = _mktTVL.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
                 availableMarketsRewards[i].marketRewardsPercentage = percentTVL;

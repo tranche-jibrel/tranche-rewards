@@ -1,14 +1,20 @@
 # tranche-rewards
 
-Rewards can be distributed in 3 different ways:
+Rewards can be distributed in 4 different ways:
 
 1. Dividend Mode: sending an amount of reward tokens directly to tranche token
 
-2. Staking Mode: via IncentiveRewardsFactory, deploying 1 staking contract for each existing tranche token and staking them in a dedicated staking contract. Rewards accrued based on the amount of staken tokens with a rate per second.
+2. Dividend Distribution Mode: via RewardsDistribution contract, like Dividend Mode, but using a contract to send tokens to tranche tokens distributed based on single market TVLs and distributing rewards to trache token holder in a single place
 
-3. Unstaken Mode: via IncentiveController, all tranche token holders can be rewarded with a rate per second and based on the tranche token amount on the total tranche token supply.
+3. Staking Mode: via IncentiveRewardsFactory contract, deploying 1 staking contract for each existing tranche token and staking them in a dedicated staking contract. Rewards accrued based on the amount of staken tokens with a rate per second.
 
-## How does Incentive Controller contract works (Model)
+4. Unstaken Mode: via IncentiveController contract, all tranche token holders can be rewarded with a rate per second and based on the tranche token amount on the total tranche token supply.
+
+All modes can be used or not, depending on the way you would like to distribute rewards.
+
+## What is the model contracts work when distributing rewards based on markets TVLs
+
+This Model can be present in all mode or not, can be set in a contract or move to the backend. Please refer to Model.sol for a pure implementation of this model, or Markets.sol for Staking Mode, or MarketHelper.sol for IncentivesController and RewardsDistribution mode. 
 
 Data: 
 
@@ -64,10 +70,16 @@ All tests (ganache required: npx ganache-cli --deterministic -l 12000000), gas r
 Solidity Coverage (no ganache required):
 
     `truffle run coverage --network development --file="<filename>"`   
+
+### Test Coverage
+
+Every distribution mode requires different contract(s) to be deployed, that's why you can find 3 different files in migration and in test folders. The easiest way to test all contracts is to deploy 1 mode only per session and launch the related test file(s)
     
+Tests on Rewards Distribution is around 70% at the moment
+
 Tests on Incentive Rewards Factory is around 95% at the moment
 
-Tests on Incentive Controller contract is around 72% at the moment
+Tests on Incentive Controller contract is around 78% at the moment
 
 ## Contracts Size (main contracts, no interfaces, no test contracts)
 Limit is 24 KiB for single contract

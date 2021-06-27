@@ -17,7 +17,7 @@ var TrancheAFDT = artifacts.require("./mocks/TrancheAToken.sol");
 var TrancheBFDT = artifacts.require("./mocks/TrancheBToken.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
 
-var MarketsHelper = artifacts.require("./MarketsHelper.sol");
+var MarketHelper = artifacts.require("./MarketHelper.sol");
 var IncentivesController = artifacts.require("./IncentivesController.sol");
 
 module.exports = async (deployer, network, accounts) => {
@@ -29,7 +29,7 @@ module.exports = async (deployer, network, accounts) => {
   //   uint256 _trBVal,
   //   uint256 _trARBP,
   //   uint256 _trAPrice)
-  /* 
+  /*
   TrARPB: 305494111 (3%)
           407325481 (4%)
           509156852 (5%)
@@ -67,7 +67,7 @@ module.exports = async (deployer, network, accounts) => {
     });
     console.log('myTrBFDT1 Deployed: ', myTrBFDTinstance.address);
 
-    const myMktHelperinstance = await deployProxy(MarketsHelper, [], {
+    const myMktHelperinstance = await deployProxy(MarketHelper, [], {
       from: tokenOwner
     });
     console.log('myMktHelperinstance Deployed: ', myMktHelperinstance.address);
@@ -128,7 +128,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log(genesisDate)
 
     const myIncentivesControllerInstance =
-      await deployProxy(IncentivesController, [myRewardTokeninstance.address, myMktHelperinstance.address, genesisDate + 5], {
+      await deployProxy(IncentivesController, [myRewardTokeninstance.address, myMktHelperinstance.address], {
         from: tokenOwner
       });
     console.log('myIncentivesControllerInstance Deployed: ', myIncentivesControllerInstance.address);

@@ -6,11 +6,13 @@
  */
 pragma solidity 0.8.0;
 
-interface IMarketsHelper {
+interface IMarketHelper {
     function getTrancheBRewardsPercentage(address _protocol, 
             uint256 _protTrNum, 
             uint256 _underlyingPrice, 
             uint256 _extProtRet, 
             uint256 _balFactor) external view returns (int256 trBRewardsPercentage);
     function getTrancheMarketTVL(address _protocol, uint256 _protTrNum, uint256 _underlyingPrice) external view returns(uint256 trancheTVL);
+    function getTrancheAMarketTVL(address _protocol, uint256 _protTrNum, uint256 _underlyingPrice) external view returns(uint256 trancheATVL);
+    function getTrancheBMarketTVL(address _protocol, uint256 _protTrNum, uint256 _underlyingPrice) external view returns(uint256 trancheBTVL);
 }

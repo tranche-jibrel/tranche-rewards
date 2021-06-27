@@ -9,11 +9,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interfaces/IProtocol.sol";
-import "./interfaces/IMarketsHelper.sol";
+import "./interfaces/IMarketHelper.sol";
 import "./math/SafeMathInt.sol";
 
 
-contract MarketsHelper is OwnableUpgradeable, IMarketsHelper {
+contract MarketHelper is OwnableUpgradeable, IMarketHelper {
     using SafeMath for uint256;
     using SafeMathInt for int256;
 
@@ -26,30 +26,42 @@ contract MarketsHelper is OwnableUpgradeable, IMarketsHelper {
 
     /**
      * @dev return total values locked in a market (tranche A)
-
+     * @param _protocol market protocol (JCompound, JAave, and so on) 
+     * @param _protTrNum market tranche number inside protocol
+     * @param _underlyingPrice underlying price of the market
      * @return trancheATVL market total value locked (tracnhe A)
      */
-    function getTrancheAMarketTVL(address _protocol, uint256 _protTrNum, uint256 _underlyingPrice) public view returns(uint256 trancheATVL) {
+    function getTrancheAMarketTVL(address _protocol, 
+            uint256 _protTrNum, 
+            uint256 _underlyingPrice) public view override returns(uint256 trancheATVL) {
         trancheATVL = (IProtocol(_protocol).getTrAValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
         return trancheATVL;
     }
 
     /**
      * @dev return total values locked in a market (tranche B)
-
+     * @param _protocol market protocol (JCompound, JAave, and so on) 
+     * @param _protTrNum market tranche number inside protocol
+     * @param _underlyingPrice underlying price of the market
      * @return trancheBTVL market total value locked (tranche B)
      */
-    function getTrancheBMarketTVL(address _protocol, uint256 _protTrNum, uint256 _underlyingPrice) public view returns(uint256 trancheBTVL) {
+    function getTrancheBMarketTVL(address _protocol, 
+            uint256 _protTrNum, 
+            uint256 _underlyingPrice) public view override returns(uint256 trancheBTVL) {
         trancheBTVL = (IProtocol(_protocol).getTrBValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
         return trancheBTVL;
     }
 
     /**
      * @dev return total values locked in a market
-
+     * @param _protocol market protocol (JCompound, JAave, and so on) 
+     * @param _protTrNum market tranche number inside protocol
+     * @param _underlyingPrice underlying price of the market
      * @return trancheTVL market total value locked
      */
-    function getTrancheMarketTVL(address _protocol, uint256 _protTrNum, uint256 _underlyingPrice) public view override returns(uint256 trancheTVL) {
+    function getTrancheMarketTVL(address _protocol, 
+            uint256 _protTrNum, 
+            uint256 _underlyingPrice) public view override returns(uint256 trancheTVL) {
         uint256 trATVL = getTrancheAMarketTVL(_protocol, _protTrNum, _underlyingPrice);
         uint256 trBTVL = getTrancheBMarketTVL(_protocol, _protTrNum, _underlyingPrice);
         trancheTVL = trATVL.add(trBTVL);
@@ -59,7 +71,8 @@ contract MarketsHelper is OwnableUpgradeable, IMarketsHelper {
 /*************************************** MODEL ************************************************/
     /**
      * @dev get tranche A returns of an available market 
-
+     * @param _protocol market protocol (JCompound, JAave, and so on) 
+     * @param _protTrNum market tranche number inside protocol
      * @return trAReturns tranche A returns (0 - 1e18)
      */
     function getTrancheAReturns(address _protocol, uint256 _protTrNum) public view returns (uint256 trAReturns) {
@@ -74,7 +87,10 @@ contract MarketsHelper is OwnableUpgradeable, IMarketsHelper {
 
     /**
      * @dev get tranche B returns of an available market
-
+     * @param _protocol market protocol (JCompound, JAave, and so on) 
+     * @param _protTrNum market tranche number inside protocol
+     * @param _underlyingPrice underlying price of the market
+     * @param _extProtRet external protocol return (from Compound, Aaave, and so on)
      * @return trBReturns tranche B returns (0 - 1e18)
      */
     function getTrancheBReturns(address _protocol, 
@@ -97,7 +113,11 @@ contract MarketsHelper is OwnableUpgradeable, IMarketsHelper {
 
     /**
      * @dev get tranche B rewards percentage of an available market (scaled by 1e18)
-
+     * @param _protocol market protocol (JCompound, JAave, and so on) 
+     * @param _protTrNum market tranche number inside protocol
+     * @param _underlyingPrice underlying price of the market
+     * @param _extProtRet external protocol return (from Compound, Aaave, and so on)
+     * @param _balFactor asynthotic balance factor between tranche A & B
      * @return trBRewardsPercentage tranche B rewards percentage (0 - 1e18)
      */
     function getTrancheBRewardsPercentage(address _protocol, 
