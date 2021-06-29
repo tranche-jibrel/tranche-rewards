@@ -101,31 +101,39 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>IncentiveRewardsFactory</td>
-            <td><code>8.83 KiB</code></td>
+            <td><code>9.50 KiB</code></td>
         </tr>
         <tr>
             <td>IncentiveRewardsFactoryStorage</td>
-            <td><code>1.08 KiB</code></td>
+            <td><code>1.11 KiB</code></td>
         </tr>
         <tr>
             <td>IncentivesController</td>
-            <td><code>15.70 KiB</code></td>
+            <td><code>15.68 KiB</code></td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>1.80 KiB</code></td>
+            <td><code>1.77 KiB</code></td>
         </tr>
         <tr>
             <td>Markets</td>
-            <td><code>11.65 KiB</code></td>
+            <td><code>11.89 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsStorage</td>
-            <td><code>1.32 KiB</code></td>
+            <td><code>1.35 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsHelpers</td>
             <td><code>3.58 KiB</code></td>
+        </tr>
+        <tr>
+            <td>RewardsDistribution</td>
+            <td><code>12.21 KiB</code></td>
+        </tr>
+        <tr>
+            <td>RewardsDistributionStorage</td>
+            <td><code>1.31 KiB</code></td>
         </tr>
     </tbody>
   </table>

@@ -124,7 +124,7 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
             uint256 _protTrNum, 
             uint256 _underlyingPrice, 
             uint256 _extProtRet, 
-            uint256 _balFactor) public view override returns (int256 trBRewardsPercentage) {
+            uint256 _balFactor) external view override returns (int256 trBRewardsPercentage) {
         int256 trBReturns = int256(getTrancheBReturns(_protocol, _protTrNum, _underlyingPrice, _extProtRet));
         int256 deltaAPY = int256(_extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
         int256 deltaAPYPercentage = deltaAPY.mul(1e18).div(int256(_extProtRet)); // DeltaAPY / extProtRet = DeltaAPYPercentage

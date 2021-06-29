@@ -28,10 +28,12 @@ var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
 var IncentiveRewardsFactory = artifacts.require("./IncentiveRewardsFactory.sol");
 var IncentiveRewards = artifacts.require("./IncentiveRewards.sol");
 var Markets = artifacts.require("./Markets.sol");
+var MarketHelper = artifacts.require("./MarketHelper.sol");
 
 let protocolContract, trAFDTContract, trBFDTContract, rewardTokenContract, trAMarket, trBMarket;
 let incentiveRewardsFactoryContract, marketsContract, stakingRewardsTrA, stakingRewardsTrB;
 let owner, user1, user2, user3, user4;
+let rst1, res2, res3, res4;
 
 contract('Incentive Rewards', function (accounts) {
     const gasPrice = new BN('1');
@@ -99,6 +101,7 @@ contract('Incentive Rewards', function (accounts) {
         expect(trBFDTContract.address).to.be.not.equal(ZERO_ADDRESS);
         expect(trBFDTContract.address).to.match(/0x[0-9a-fA-F]{40}/);
         // console.log(trBFDTContract.address);
+
         rewardTokenContract = await RewardToken.deployed();
         expect(rewardTokenContract.address).to.be.not.equal(ZERO_ADDRESS);
         expect(rewardTokenContract.address).to.match(/0x[0-9a-fA-F]{40}/);
@@ -110,6 +113,9 @@ contract('Incentive Rewards', function (accounts) {
         marketsContract = await Markets.deployed();
         expect(marketsContract.address).to.be.not.equal(ZERO_ADDRESS);
         expect(marketsContract.address).to.match(/0x[0-9a-fA-F]{40}/);
+        marketHelperContract = await MarketHelper.deployed();
+        expect(marketHelperContract.address).to.be.not.equal(ZERO_ADDRESS);
+        expect(marketHelperContract.address).to.match(/0x[0-9a-fA-F]{40}/);
     });
 
     it('mint some tokens from tranche A and B', async function () {
@@ -153,15 +159,21 @@ contract('Incentive Rewards', function (accounts) {
                 });
 
             console.log("Total TVL: " + web3.utils.fromWei((await marketsContract.getAllMarketsTVL()).toString()))
-            console.log("Total TVL in Market0: " + web3.utils.fromWei((await marketsContract.getTrancheMarketTVL(0)).toString()))
+
+            res1 = await marketsContract.availableMarkets(0)
+            res2 = await marketsContract.availableMarketsRewards(0)
+            console.log("Total TVL in Market0: " + (web3.utils.fromWei(await marketHelperContract.getTrancheMarketTVL(res1[0], res1[5], res2[0])).toString()))
+            // ret3 = await marketsContract.availableMarkets(1)
+            // ret4 = await marketsContract.availableMarketsRewards(1)
+            // console.log("Total TVL in Market1: " + (web3.utils.fromWei(await marketHelperContract.getTrancheMarketTVL(ret3[0], ret3[5], ret4[0])).toString()))
 
             await marketsContract.refreshSliceSpeeds();
 
             count = await marketsContract.marketsCounter();
             console.log("Count markets: " + count)
-            trATVL = await marketsContract.getTrancheAMarketTVL(0);
-            trBTVL = await marketsContract.getTrancheBMarketTVL(0);
-            totTrTVL = await marketsContract.getTrancheMarketTVL(0);
+            trATVL = await marketHelperContract.getTrancheAMarketTVL(res1[0], res1[5], res2[0]);
+            trBTVL = await marketHelperContract.getTrancheBMarketTVL(res1[0], res1[5], res2[0]);
+            totTrTVL = await marketHelperContract.getTrancheMarketTVL(res1[0], res1[5], res2[0]);
             console.log("trATVL: " + web3.utils.fromWei(trATVL, "ether") + ", trBTVL: " +
                 web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether"));
             mktShare = await marketsContract.getMarketSharePerTranche(0);
@@ -169,11 +181,11 @@ contract('Incentive Rewards', function (accounts) {
         });
 
         it('read values from tranches', async function () {
-            trARet = await marketsContract.getTrancheAReturns(0);
+            trARet = await marketHelperContract.getTrancheAReturns(res1[0], res1[5]);
             console.log("tranche A return: " + web3.utils.fromWei(trARet) * 100 + " %");
-            trBRet = await marketsContract.getTrancheBReturns(0);
+            trBRet = await marketHelperContract.getTrancheBReturns(res1[0], res1[5], res2[0], res1[7]);
             console.log("tranche B return: " + web3.utils.fromWei(trBRet) * 100 + " %");
-            trBRewPerc = await marketsContract.getTrancheBRewardsPercentage(0);
+            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res1[0], res1[5], res2[0], res1[7], res1[6]);
             console.log("tranche B rewards percentage: " + web3.utils.fromWei(trBRewPerc) * 100 + " %");
             trARewPerc = ether('1').sub(trBRewPerc);
             console.log("tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
@@ -183,7 +195,7 @@ contract('Incentive Rewards', function (accounts) {
     describe('deploy staking rewards contracts and staking tokens', function () {
         it('deploy Staking Contracts for A & B', async function () {
             // now = Date.now() / 1000 | 0;
-            duration = 864000; // 10 giorni
+            duration = 86400; // 1 giorno
 
             trAMarket = await marketsContract.getATrancheMarket(0)
             trBMarket = await marketsContract.getBTrancheMarket(0)
@@ -204,6 +216,18 @@ contract('Incentive Rewards', function (accounts) {
             console.log("TrA Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
             res = await incentiveRewardsFactoryContract.incentiveRewardsInfoByStakingToken(stkAddressB)
             console.log("TrB Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
+        });
+
+        it('read amounts to split for A & B tranche', async function () {
+            result = await marketsContract.availableMarketsRewards(0)
+            console.log("TrA Rewards Percent: " + web3.utils.fromWei(result[2].toString()), 
+                "%, TrA Rewards Percent: " + web3.utils.fromWei(result[3].toString()) + "%")
+
+            await incentiveRewardsFactoryContract.getAmountsForMarkets(ether("100"))
+            
+            result = await marketsContract.availableMarketsRewards(0)
+            console.log("TrA Rewards Percent: " + web3.utils.fromWei(result[2].toString()), 
+                "%, TrA Rewards Percent: " + web3.utils.fromWei(result[3].toString()) + "%")
         });
 
         it('stake tranche tokens in Staking Contracts for A & B', async function () {
@@ -229,7 +253,7 @@ contract('Incentive Rewards', function (accounts) {
         it('time passes...', async function () {
             let block = await web3.eth.getBlockNumber();
             console.log("Actual Block: " + block);
-            for (i = 0; i < 1000; i++) {
+            for (i = 0; i < 100; i++) {
                 await timeMachine.advanceBlockAndSetTime()
             }
             console.log("New Actual Block: " + await web3.eth.getBlockNumber())
@@ -309,7 +333,7 @@ contract('Incentive Rewards', function (accounts) {
         it('time passes...', async function () {
             let block = await web3.eth.getBlockNumber();
             console.log("Actual Block: " + block);
-            for (i = 0; i < 1000; i++) {
+            for (i = 0; i < 100; i++) {
                 await timeMachine.advanceBlockAndSetTime()
             }
             console.log("New Actual Block: " + await web3.eth.getBlockNumber())

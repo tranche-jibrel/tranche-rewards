@@ -34,12 +34,13 @@ contract MarketsStorage is OwnableUpgradeable {
         uint256 rewardsTrBAPY; // scaled by 1e18
     }
 
+    uint256 public marketsCounter;
+    address public rewardFactoryAddress;
+    address public mktHelperAddress;
+
     mapping(uint256 => Market) public availableMarkets;
     mapping(uint256 => MarketRewards) public availableMarketsRewards;
     // market -> current rewards balance
     mapping(uint256 => uint256) public fundsATokenBalance;
     mapping(uint256 => uint256) public fundsBTokenBalance;
-
-    uint256 public marketsCounter;
-    address public rewardFactoryAddress;
 }

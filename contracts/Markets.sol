@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./MarketsStorage.sol";
 import "./interfaces/IProtocol.sol";
 import "./interfaces/IMarkets.sol";
+import "./interfaces/IMarketHelper.sol";
 import "./interfaces/IJTrancheTokens.sol";
 import "./math/SafeMathInt.sol";
 
@@ -21,11 +22,12 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     using SafeMathInt for int256;
 
     /**
-     * @dev initialize contract
-     */
-    function initialize (address _rFactory) public initializer() {
+    * @dev initialize contract
+    * @param _marketHelper markets helper contract address
+    */
+    function initialize (address _marketHelper) public initializer() {
         OwnableUpgradeable.__Ownable_init();
-        rewardFactoryAddress = _rFactory;
+        mktHelperAddress = _marketHelper;
     }
 
     modifier onlyRewardsFactory() {
@@ -33,8 +35,20 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         _;
     }
 
+    /**
+    * @dev set rewards factory
+    * @param _rFactory rewards factory contract address
+    */
     function setRewardsFactory(address _rFactory) public onlyOwner {
         rewardFactoryAddress = _rFactory;
+    }
+
+    /**
+    * @dev set markets contract address
+    * @param _markets markets contract address
+    */
+    function setMarketAddress(address _markets) external onlyOwner {
+        mktHelperAddress = _markets;
     }
 
     /**
@@ -243,7 +257,7 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     /**
      * @dev Recalculate and update Slice speeds for all markets
      */
-    function refreshSliceSpeeds() external onlyOwner {
+    function refreshSliceSpeeds() external override onlyOwner {
         require(msg.sender == tx.origin, "TokenRewards: only externally owned accounts may refresh speeds");
         refreshSliceSpeedsInternal();
     }
@@ -253,11 +267,19 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
      */
     function refreshSliceSpeedsInternal() internal {
         uint256 allMarketsEnabledTVL = getAllMarketsTVL();
+        address _protocol;
+        uint256 _trNum;
+        uint256 _underPrice;
+        uint256 _mktTVL;
 
         for (uint i = 0; i < marketsCounter; i++) {
             if (availableMarkets[i].enabled && allMarketsEnabledTVL > 0) {
-                uint256 tmpMarketVal = getTrancheMarketTVL(i).mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
-                uint256 percentTVL = tmpMarketVal.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
+                _protocol = availableMarkets[i].protocol;
+                _trNum = availableMarkets[i].protocolTrNumber;
+                _underPrice = availableMarketsRewards[i].underlyingPrice;
+                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                // uint256 tmpMarketVal = getTrancheMarketTVL(i).mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
+                uint256 percentTVL = _mktTVL.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
                 availableMarketsRewards[i].marketRewardsPercentage = percentTVL;
             } else {
                 availableMarketsRewards[i].marketRewardsPercentage = 0;
@@ -289,42 +311,6 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     }
 
     /**
-     * @dev return total values locked in a market (tranche A)
-     * @param _idxMarket market index
-     * @return trancheATVL market total value locked (tracnhe A)
-     */
-    function getTrancheAMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheATVL) {
-        address _protocol = availableMarkets[_idxMarket].protocol;
-        uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
-        trancheATVL = (IProtocol(_protocol).getTrAValue(_trNum)).mul(availableMarketsRewards[_idxMarket].underlyingPrice).div(1e18);
-        return trancheATVL;
-    }
-
-    /**
-     * @dev return total values locked in a market (tranche B)
-     * @param _idxMarket market index
-     * @return trancheBTVL market total value locked (tracnhe B)
-     */
-    function getTrancheBMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheBTVL) {
-        address _protocol = availableMarkets[_idxMarket].protocol;
-        uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
-        trancheBTVL = (IProtocol(_protocol).getTrBValue(_trNum)).mul(availableMarketsRewards[_idxMarket].underlyingPrice).div(1e18);
-        return trancheBTVL;
-    }
-
-    /**
-     * @dev return total values locked in a market
-     * @param _idxMarket market index
-     * @return trancheTVL market total value locked
-     */
-    function getTrancheMarketTVL(uint256 _idxMarket) public view returns(uint256 trancheTVL) {
-        uint256 trATVL = getTrancheAMarketTVL(_idxMarket);
-        uint256 trBTVL = getTrancheBMarketTVL(_idxMarket);
-        trancheTVL = trATVL.add(trBTVL);
-        return trancheTVL;
-    }
-
-    /**
      * @dev return market share of an enabled market respect to all values locked in all markets
      * @param _idxMarket market index
      * @return marketShare market share
@@ -334,11 +320,83 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         uint256 totalValue = getAllMarketsTVL();
 
         if (totalValue > 0 && availableMarkets[_idxMarket].enabled) {
-            uint256 trancheVal = getTrancheMarketTVL(_idxMarket);
+            address _protocol = availableMarkets[_idxMarket].protocol;
+            uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
+            uint256 _underPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
+            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
             marketShare = trancheVal.mul(1e18).div(totalValue);
         } else 
             marketShare = 0;
         return marketShare;
+    }
+
+    /**
+     * @dev distribute an amount of rewards tokens to all available and enabled markets, splitting the amount between all markets and tranches
+     * @param _amount amount of tokens to distribute to this market (tranche A + tranche B)
+     */
+    function distributeAllMarketsFunds(uint256 _amount) external override returns(uint256[] memory, uint256[] memory){
+        require(_amount > 0, "TokenRewards: no tokens");
+        require(marketsCounter > 0, "TokenRewards: no markets");
+        uint256[] memory trAAmount = new uint256[](marketsCounter);
+        uint256[] memory trBAmount = new uint256[](marketsCounter);
+        // SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardToken), msg.sender, address(this), _amount);
+        for(uint256 i = 0; i < marketsCounter; i++) {
+            if (availableMarketsRewards[i].marketRewardsPercentage > 0) {
+                uint256 trRewardsAmount = _amount.mul(availableMarketsRewards[i].marketRewardsPercentage).div(1e18);
+                distributeSingleMarketsFundsInternal(i, trRewardsAmount);
+                trAAmount[i] = availableMarketsRewards[i].trancheARewardsAmount;
+                trBAmount[i] = availableMarketsRewards[i].trancheBRewardsAmount;
+            } else {
+                trAAmount[i] = 0;
+                trBAmount[i] = 0;
+            }
+        }
+        return (trAAmount, trBAmount);
+    }
+
+    /**
+     * @dev internal function
+     * @dev distribute an amount of rewards tokens to an enabled market, splitting the amount between tranche A & B
+     * @param _idxMarket market index
+     * @param _amount amount of tokens to distribute to this market (tranche A + tranche B)
+     */
+    function distributeSingleMarketsFundsInternal(uint256 _idxMarket, uint256 _amount) internal {
+        if (_amount > 0 && _idxMarket < marketsCounter && availableMarkets[_idxMarket].enabled){
+            address _protocol = availableMarkets[_idxMarket].protocol;
+            uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
+            uint256 _underlyingPrice = availableMarketsRewards[_idxMarket].underlyingPrice; 
+            uint256 _extProtRet = availableMarkets[_idxMarket].extProtocolPercentage;
+            uint256 _balFactor = availableMarkets[_idxMarket].balanceFactor;
+            uint256 trBPercent = 
+                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _extProtRet, _balFactor));
+            uint256 trBAmount = _amount.mul(trBPercent).div(1e18);
+            uint256 trAAmount = _amount.sub(trBAmount);
+            availableMarketsRewards[_idxMarket].trancheBRewardsAmount = trBAmount;
+            // SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardToken), availableMarkets[_idxMarket].bTranche, trBAmount);
+
+            availableMarketsRewards[_idxMarket].trancheARewardsAmount = trAAmount;
+            // SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardToken), availableMarkets[_idxMarket].aTranche, trAAmount);
+
+            availableMarkets[_idxMarket].updateBlock = block.number;
+
+            emit FundsDistributed(_idxMarket, trAAmount, trBAmount, block.number);
+        }
+    }
+
+    /**
+     * @dev distribute an amount of rewards tokens to an available and enabled market, splitting the amount between tranche A & B
+     * @param _idxMarket market index
+     * @param _amount amount of tokens to distribute to this market (tranche A + tranche B)
+     */
+    function distributeSingleMarketsFunds(uint256 _idxMarket, uint256 _amount) external override returns (uint256, uint256) {
+        require(_amount > 0, "TokenRewards: no tokens");
+        require(marketsCounter > _idxMarket, "TokenRewards: market not found");
+        require(availableMarkets[_idxMarket].enabled, "TokenRewards: market disabled");
+
+        // SafeERC20Upgradeable.safeTransferFrom(IERC20Upgradeable(rewardToken), msg.sender, address(this), _amount);
+        distributeSingleMarketsFundsInternal(_idxMarket, _amount);
+
+        return (availableMarketsRewards[_idxMarket].trancheARewardsAmount, availableMarketsRewards[_idxMarket].trancheBRewardsAmount);
     }
 
     function getRewardsAPYSingleMarketTrancheA(uint256 _idxMarket) external view returns(uint256 rewardsAPY) {
@@ -350,67 +408,6 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrBAPY;
         return rewardsAPY;
     }
-
-/*************************************** MODEL ************************************************/
-    /**
-     * @dev get tranche A returns of an available market 
-     * @param _idxMarket market index
-     * @return trAReturns tranche A returns (0 - 1e18)
-     */
-    function getTrancheAReturns(uint256 _idxMarket) public view returns (uint256 trAReturns) {
-        require(availableMarkets[_idxMarket].enabled, "Market not enabled");
-        address _protocol = availableMarkets[_idxMarket].protocol;
-        uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
-        uint256 trancheARPB = IProtocol(_protocol).getTrancheACurrentRPB(_trNum);
-        uint256 totBlksYear = IProtocol(_protocol).totalBlocksPerYear();
-        uint256 trAPrice = IProtocol(_protocol).getTrancheAExchangeRate(_trNum);
-        // calc percentage
-        // trA APY = trARPB * 2102400 / trAPrice
-        trAReturns = trancheARPB.mul(totBlksYear).mul(1e18).div(trAPrice);
-        return trAReturns;
-    }
-
-    /**
-     * @dev get tranche B returns of an available market
-     * @param _idxMarket market index
-     * @return trBReturns tranche B returns (0 - 1e18)
-     */
-    function getTrancheBReturns(uint256 _idxMarket) public view returns (int256 trBReturns) {
-        require(availableMarkets[_idxMarket].enabled, "Market not enabled");
-        uint256 trAReturns = getTrancheAReturns(_idxMarket);
-        uint256 trARetPercent = trAReturns.add(1e18); //(1+trARet)
-        uint256 totTrancheTVL = getTrancheMarketTVL(_idxMarket);
-        uint256 trATVL = getTrancheAMarketTVL(_idxMarket);
-        uint256 trBTVL = totTrancheTVL.sub(trATVL);
-        uint256 totRetPercent = (availableMarkets[_idxMarket].extProtocolPercentage).add(1e18); //(1+extProtRet)
-
-        uint256 extFutureValue = totTrancheTVL.mul(totRetPercent).div(1e18); // totalTVL*(1+extProtRet)
-        uint256 trAFutureValue = trATVL.mul(trARetPercent).div(1e18); // trATVL*(1+trARet)
-        // (totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL
-        trBReturns = (int256(extFutureValue).sub(int256(trAFutureValue)).sub(int256(trBTVL))).mul(int256(1e18)).div(int256(trBTVL));  //check decimals!!!
-        return trBReturns;
-    }
-
-    /**
-     * @dev get tranche B rewards percentage of an available market (scaled by 1e18)
-     * @param _idxMarket market index
-     * @return trBRewardsPercentage tranche B rewards percentage (0 - 1e18)
-     */
-    function getTrancheBRewardsPercentage(uint256 _idxMarket) public view returns (int256 trBRewardsPercentage) {
-        require(availableMarkets[_idxMarket].enabled, "Market not enabled");
-        int256 trBReturns = int256(getTrancheBReturns(_idxMarket));
-        int256 extProtRet = int256(availableMarkets[_idxMarket].extProtocolPercentage);
-        int256 deltaAPY = (extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
-        int256 deltaAPYPercentage = deltaAPY.mul(1e18).div(extProtRet); // DeltaAPY / extProtRet = DeltaAPYPercentage
-        trBRewardsPercentage = deltaAPYPercentage.add(int256(availableMarkets[_idxMarket].balanceFactor)); // DeltaAPYPercentage + balanceFactor = trBPercentage
-        if (trBRewardsPercentage < 0 )
-            trBRewardsPercentage = 0;
-        else if (trBRewardsPercentage > 1e18)
-            trBRewardsPercentage = 1e18;
-        return trBRewardsPercentage;
-    }
-
-/*************************************** END MODEL ************************************************/
 
     /**
      * @dev get the balance of a token in this contract

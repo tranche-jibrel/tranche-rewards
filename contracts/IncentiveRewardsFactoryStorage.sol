@@ -24,10 +24,11 @@ contract IncentiveRewardsFactoryStorage is OwnableUpgradeable {
         uint256 duration;
     }
 
+    address public marketsAddress;
+
     // rewards info by staking token
     mapping(address => IncentiveRewardsInfo) public incentiveRewardsInfoByStakingToken;
 
-    address marketsAddress;
     // staking token => trancheToken
     mapping(address => address) public stakingTokenTranches;
 
