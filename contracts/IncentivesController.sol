@@ -15,6 +15,7 @@ import "./IncentivesControllerStorage.sol";
 import "./interfaces/IProtocol.sol";
 import "./interfaces/IIncentivesController.sol";
 import "./interfaces/IMarketHelper.sol";
+import "./interfaces/IPriceHelper.sol";
 import "./math/SafeMathInt.sol";
 
 contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage, IIncentivesController, ReentrancyGuardUpgradeable {
@@ -25,12 +26,14 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @dev initialize contract
      * @param _token reward token address (SLICE or others)
      * @param _mktHelper Address of markets helper contract
+     * @param _priceHelper Address of price helper contract
      */
-    function initialize (address _token, address _mktHelper) public initializer() {
+    function initialize (address _token, address _mktHelper, address _priceHelper) public initializer() {
         // require(_stakingRewardsGenesis >= block.timestamp, 'IncentiveRewardsFactory::constructor: genesis too soon');
         OwnableUpgradeable.__Ownable_init();
         rewardsTokenAddress = _token;
         mktHelperAddress = _mktHelper;
+        priceHelperAddress = _priceHelper;
         // stakingRewardsGenesis = _stakingRewardsGenesis;
     }
 
@@ -156,7 +159,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @dev return total values locked in all available and enabled markets
      * @return markets total value locked 
      */
-    function getAllMarketsTVL() public view returns(uint256) {
+    function getAllMarketsTVL(/*bool _useChainlink*/) public view returns(uint256) {
         uint256 allMarketTVL;
         address _protocol;
         uint256 _trNum;
@@ -167,6 +170,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             if (availableMarkets[i].enabled) {
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
+                // if (_useChainlink)
+                //     setUnderlyingPriceFromChainlinkSingleMarket(i);
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
                 tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
                 allMarketTVL = allMarketTVL.add(tmpMarketVal);
@@ -182,12 +187,14 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @return marketShare market share
      */
-    function getMarketSharePerTranche(uint256 _idxMarket) external view returns(uint256 marketShare) {
-        uint256 totalValue = getAllMarketsTVL();
+    function getMarketSharePerTranche(uint256 _idxMarket/*, bool _useChainlink*/) external view returns(uint256 marketShare) {
+        uint256 totalValue = getAllMarketsTVL(/*_useChainlink*/);
 
         if (totalValue > 0 && availableMarkets[_idxMarket].enabled) {
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
+            // if (_useChainlink)
+            //     setUnderlyingPriceFromChainlinkSingleMarket(_idxMarket);
             uint256 _underPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
             uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
             marketShare = trancheVal.mul(1e18).div(totalValue);
@@ -235,7 +242,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _token rewards token address (SLICE or other)
      */
     function setRewardTokenAddress(address _token) external onlyOwner {
-        require(_token != address(0), "TokenRewards: address not allowed");
+        require(_token != address(0), "IncentiveController: address not allowed");
         rewardsTokenAddress = _token;
     }
 
@@ -244,7 +251,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _mktHelper market helper contract address
      */
     function setMarketHelperAddress(address _mktHelper) external onlyOwner {
-        require(_mktHelper != address(0), "TokenRewards: address not allowed");
+        require(_mktHelper != address(0), "IncentiveController: address not allowed");
         mktHelperAddress = _mktHelper;
     }
 
@@ -256,7 +263,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
      * @param _rewardsDuration rewards duration (in seconds)
-     * @param _underlyingPrice initial underlying price, in common currency (scaled by 1e18)
+     * @param _chainAggrInterface,chainlink price address
+     * @param _reciprocPrice,is reciprocal price or not
      */
     function addTrancheMarket(address _protocol, 
             uint256 _protocolTrNumber,
@@ -264,14 +272,15 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             uint256 _marketPercentage,
             uint256 _extProtReturn,
             uint256 _rewardsDuration,
-            uint256 _underlyingPrice) external onlyOwner{
-        require(_balFactor <= uint256(1e18), "TokenRewards: balance factor too high");
-        require(_marketPercentage <= uint256(1e18), "TokenRewards: market percentage too high");
-        require(_rewardsDuration > 0 && _rewardsDuration < uint256(366), "TokenRewards: rewards frequency too high");
+            address _chainAggrInterface,
+            bool _reciprocPrice) external onlyOwner{
+        require(_balFactor <= uint256(1e18), "IncentiveController: balance factor too high");
+        require(_marketPercentage <= uint256(1e18), "IncentiveController: market percentage too high");
+        require(_rewardsDuration > 0, "IncentiveController: rewards duration cannot be zero");
         availableMarkets[marketsCounter].protocol = _protocol;
         availableMarkets[marketsCounter].protocolTrNumber = _protocolTrNumber;
         ( , , address trAAddress, address trBAddress) = IProtocol(_protocol).trancheAddresses(_protocolTrNumber);
-        require(trAAddress != address(0) && trBAddress != address(0), "TokenRewards: tranches not found");
+        require(trAAddress != address(0) && trBAddress != address(0), "IncentiveController: tranches not found");
         availableMarkets[marketsCounter].aTranche = trAAddress;
         availableMarkets[marketsCounter].bTranche = trBAddress;
         availableMarkets[marketsCounter].balanceFactor = _balFactor; // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
@@ -281,7 +290,10 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarketsRewards[marketsCounter].rewardsDuration = _rewardsDuration; // in seconds
-        availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice; // scaled in 1e18
+
+        IPriceHelper(priceHelperAddress).setExternalProviderParameters(marketsCounter, _chainAggrInterface, _reciprocPrice);
+
+        availableMarketsRewards[marketsCounter].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(marketsCounter);
 
         initRewardsSingleMarket(marketsCounter);
         
@@ -307,7 +319,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _enables true or false array
      */
     function enableAllMarket(bool[] memory _enables) external onlyOwner {
-        require(_enables.length == marketsCounter, "TokenRewards: enable array not correct length");
+        require(_enables.length == marketsCounter, "IncentiveController: enable array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarkets[i].enabled = _enables[i];
         }
@@ -319,18 +331,18 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _rewardsDuration rewards frequency (in seconds)
      */
     function setRewardsFrequencySingleMarket(uint256 _idxMarket, uint256 _rewardsDuration) external onlyOwner {
-        require(_rewardsDuration > 0 && _rewardsDuration <= 365, "TokenRewards: rewards frequency can not be zero nor greater than 1 year");
+        require(_rewardsDuration > 0, "IncentiveController: rewards frequency cannot be zero");
         availableMarketsRewards[_idxMarket].rewardsDuration = _rewardsDuration;
     }
 
     /**
      * @dev set reward frequency for all markets
-     * @param _rewardsFreqs rewards frequency array (in days)
+     * @param _rewardsFreqs rewards frequency array (in seconds)
      */
     function setRewardsFrequencyAllMarkets(uint256[] memory _rewardsFreqs) external onlyOwner {
-        require(_rewardsFreqs.length ==  marketsCounter, "TokenRewards: rewards frequency array not correct length");
+        require(_rewardsFreqs.length ==  marketsCounter, "IncentiveController: rewards frequency array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
-            availableMarketsRewards[i].rewardsDuration = _rewardsFreqs[i] * 1 days;
+            availableMarketsRewards[i].rewardsDuration = _rewardsFreqs[i];
         }
     }
 
@@ -340,7 +352,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _percentage rewards percentage (scaled by 1e18)
      */
     function setRewardsPercentageSingleMarket(uint256 _idxMarket, uint256 _percentage) external onlyOwner {
-        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
         availableMarketsRewards[_idxMarket].marketRewardsPercentage = _percentage;
     }
 
@@ -349,7 +361,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _percentages rewards percentage array (scaled by 1e18)
      */
     function setRewardsPercentageAllMarkets(uint256[] memory _percentages) external onlyOwner {
-        require(_percentages.length == marketsCounter, "TokenRewards: ext protocol array not correct length");
+        require(_percentages.length == marketsCounter, "IncentiveController: ext protocol array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarketsRewards[i].marketRewardsPercentage = _percentages[i];
         }
@@ -361,7 +373,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _extProtPerc external protocol rewards percentage (scaled by 1e18)
      */
     function setExtProtocolPercentSingleMarket(uint256 _idxMarket, uint256 _extProtPerc) external onlyOwner {
-        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
         availableMarkets[_idxMarket].extProtocolPercentage = _extProtPerc;
     }
 
@@ -370,7 +382,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _extProtPercs external protocol rewards percentage array (scaled by 1e18)
      */
     function setExtProtocolPercentAllMarkets(uint256[] memory _extProtPercs) external onlyOwner {
-        require(_extProtPercs.length == marketsCounter, "TokenRewards: ext protocol array not correct length");
+        require(_extProtPercs.length == marketsCounter, "IncentiveController: ext protocol array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarkets[i].extProtocolPercentage = _extProtPercs[i];
         }
@@ -382,7 +394,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _balFactor balance factor (scaled by 1e18)
      */
     function setBalanceFactorSingleMarket(uint256 _idxMarket, uint256 _balFactor) external onlyOwner {
-        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
         availableMarkets[_idxMarket].balanceFactor = _balFactor;
     }
 
@@ -391,7 +403,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _balFactors balance factor array (scaled by 1e18)
      */
     function setBalanceFactorAllMarkets(uint256[] memory _balFactors) external onlyOwner {
-        require(_balFactors.length == marketsCounter, "TokenRewards: ext protocol array not correct length");
+        require(_balFactors.length == marketsCounter, "IncentiveController: ext protocol array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarkets[i].balanceFactor = _balFactors[i];
         }
@@ -402,19 +414,37 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @param _price underlying price (scaled by 1e18)
      */
-    function setUnderlyingPriceSingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
-        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+    function setUnderlyingPriceManuallySingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
         availableMarketsRewards[_idxMarket].underlyingPrice = _price;
+    }
+
+    /**
+     * @dev set underlying price in common currency for a market (scaled by 1e18)
+     * @param _idxMarket market index
+     */
+    function setUnderlyingPriceFromChainlinkSingleMarket(uint256 _idxMarket) public onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
+        availableMarketsRewards[_idxMarket].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(_idxMarket);
     }
 
     /**
      * @dev set underlying price in common currency for all markets (scaled by 1e18)
      * @param _prices underlying prices array (scaled by 1e18)
      */
-    function setUnderlyingPriceAllMarkets(uint256[] memory _prices) external onlyOwner {
-        require(_prices.length == marketsCounter, "TokenRewards: Prices array not correct length");
+    function setUnderlyingPriceManuallyAllMarkets(uint256[] memory _prices) external onlyOwner {
+        require(_prices.length == marketsCounter, "IncentiveController: Prices array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarketsRewards[i].underlyingPrice = _prices[i];
+        }
+    }
+
+    /**
+     * @dev set underlying price in common currency for all markets (scaled by 1e18)
+     */
+    function setUnderlyingPriceFromChainlinkAllMarkets() external onlyOwner {
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            setUnderlyingPriceFromChainlinkSingleMarket(i);
         }
     }
     
@@ -612,16 +642,16 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
     /**
      * @dev Recalculate and update Slice speeds for all markets
      */
-    function refreshSliceSpeeds() external onlyOwner {
-        require(msg.sender == tx.origin, "TokenRewards: only externally owned accounts may refresh speeds");
-        refreshSliceSpeedsInternal();
+    function refreshSliceSpeeds(/*bool _useChainlink*/) external onlyOwner {
+        require(msg.sender == tx.origin, "IncentiveController: only externally owned accounts may refresh speeds");
+        refreshSliceSpeedsInternal(/*_useChainlink*/);
     }
 
     /**
      * @dev internal function - refresh rewards percentage of available and enabled markets
      */
-    function refreshSliceSpeedsInternal() internal {
-        uint256 allMarketsEnabledTVL = getAllMarketsTVL();
+    function refreshSliceSpeedsInternal(/*bool _useChainlink*/) internal {
+        uint256 allMarketsEnabledTVL = getAllMarketsTVL(/*_useChainlink*/);
         address _protocol;
         uint256 _trNum;
         uint256 _underPrice;
@@ -631,6 +661,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             if (availableMarkets[i].enabled && allMarketsEnabledTVL > 0) {
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
+                // if (_useChainlink)
+                //     setUnderlyingPriceFromChainlinkSingleMarket(i);
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
                 _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
                 // uint256 _mktTVLtmpMarketVal = _mktTVL.mul(availableMarketsRewards[i].underlyingPrice).div(1e18);

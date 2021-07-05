@@ -70,6 +70,12 @@ contract IncentiveRewardsFactory is IncentiveRewardsFactoryStorage {
         }
     }
 
+    /**
+    * @dev get amounts splitted for every enabled market, tranche A & B
+    * @param _totalAmount total amount of rewards to be splitted
+    * @return trAAmounts tranche A array amounts
+    * @return trBAmounts tranche B array amounts
+    */
     function getAmountsForMarkets(uint256 _totalAmount) external returns(uint256[] memory trAAmounts, uint256[] memory trBAmounts) {
         (trAAmounts,trBAmounts) = IMarkets(marketsAddress).distributeAllMarketsFunds(_totalAmount);
         return (trAAmounts,trBAmounts);

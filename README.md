@@ -2,15 +2,17 @@
 
 Rewards can be distributed in 4 different ways:
 
-1. Dividend Mode: sending an amount of reward tokens directly to tranche token
+1. Dividend Mode: sending an amount of reward tokens directly to tranche token (calculations has to be performed offchain)
 
-2. Dividend Distribution Mode: via RewardsDistribution contract, like Dividend Mode, but using a contract to send tokens to tranche tokens distributed based on single market TVLs and distributing rewards to trache token holder in a single place
+2. Dividend Distribution Mode: via RewardsDistribution contract, like Dividend Mode, but using a contract to send tokens to tranche tokens distributed based on single market TVLs and distributing rewards to trache token holders in a single place
 
 3. Staking Mode: via IncentiveRewardsFactory contract, deploying 1 staking contract for each existing tranche token and staking them in a dedicated staking contract. Rewards accrued based on the amount of staken tokens with a rate per second.
 
 4. Unstaken Mode: via IncentiveController contract, all tranche token holders can be rewarded with a rate per second and based on the tranche token amount on the total tranche token supply.
 
 All modes can be used or not, depending on the way you would like to distribute rewards.
+
+Underlying prices for markets can be directly set by the owner, or read from chainlink price feeds. 
 
 ## What is the model contracts work when distributing rewards based on markets TVLs
 
@@ -79,7 +81,7 @@ Tests on Rewards Distribution is around 70% at the moment
 
 Tests on Incentive Rewards Factory is around 95% at the moment
 
-Tests on Incentive Controller contract is around 78% at the moment
+Tests on Incentive Controller contract is around 97% at the moment
 
 ## Contracts Size (main contracts, no interfaces, no test contracts)
 Limit is 24 KiB for single contract
@@ -109,11 +111,11 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>IncentivesController</td>
-            <td><code>15.68 KiB</code></td>
+            <td><code>16.68 KiB</code></td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>1.77 KiB</code></td>
+            <td><code>1.81 KiB</code></td>
         </tr>
         <tr>
             <td>Markets</td>
@@ -124,8 +126,16 @@ Limit is 24 KiB for single contract
             <td><code>1.35 KiB</code></td>
         </tr>
         <tr>
-            <td>MarketsHelpers</td>
+            <td>MarketsHelper</td>
             <td><code>3.58 KiB</code></td>
+        </tr>
+        <tr>
+            <td>PriceHelper</td>
+            <td><code>3.73 KiB</code></td>
+        </tr>
+        <tr>
+            <td>PriceHelperStorage</td>
+            <td><code>0.95 KiB</code></td>
         </tr>
         <tr>
             <td>RewardsDistribution</td>

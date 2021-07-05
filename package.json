@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/tranche-jibrel/tranche-rewards#readme",
   "dependencies": {
+    "@chainlink/contracts": "^0.2.0",
     "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.0.0",
     "chai": "^4.3.4",
