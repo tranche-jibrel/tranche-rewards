@@ -9,3 +9,5 @@ unknown*
 coverage
 coverage.json
 coverageEnv
+.env
+dist/

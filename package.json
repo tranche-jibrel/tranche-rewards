@@ -22,14 +22,16 @@
     "@chainlink/contracts": "^0.2.0",
     "@openzeppelin/contracts": "^4.0.0",
     "@openzeppelin/contracts-upgradeable": "^4.0.0",
+    "@truffle/hdwallet-provider": "^1.4.1",
     "chai": "^4.3.4",
     "dotenv": "^8.2.0",
+    "solc": "0.4.25",
     "truffle": "latest",
     "web3": "latest"
   },
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.11",
-    "@openzeppelin/truffle-upgrades": "^1.7.0",
+    "@openzeppelin/truffle-upgrades": "1.8.0",
     "eth-gas-reporter": "^0.2.22",
     "ganache-cli": "^6.12.2",
     "ganache-time-traveler": "^1.0.15",
