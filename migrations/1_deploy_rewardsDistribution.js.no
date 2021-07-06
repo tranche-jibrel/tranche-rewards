@@ -10,8 +10,11 @@ var Protocol = artifacts.require("./mocks/Protocol.sol");
 var TrancheAFDT = artifacts.require("./mocks/TrancheAToken.sol");
 var TrancheBFDT = artifacts.require("./mocks/TrancheBToken.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
+var Chainlink1 = artifacts.require("./mocks/Chainlink1.sol");
+var Chainlink2 = artifacts.require("./mocks/Chainlink2.sol");
 
 var MarketHelper = artifacts.require("./MarketHelper.sol");
+var PriceHelper = artifacts.require("./PriceHelper.sol");
 var RewardsDistribution = artifacts.require("./RewardsDistribution.sol");
 
 module.exports = async (deployer, network, accounts) => {
@@ -45,6 +48,21 @@ module.exports = async (deployer, network, accounts) => {
 
   if (network == "development") {
     const tokenOwner = accounts[0];
+
+    const myChainlink1Inst = await deployProxy(Chainlink1, [], {
+      from: tokenOwner
+    });
+    console.log('myChainlink1 Deployed: ', myChainlink1Inst.address);
+
+    const myChainlink2Inst = await deployProxy(Chainlink2, [], {
+      from: tokenOwner
+    });
+    console.log('myChainlink2 Deployed: ', myChainlink2Inst.address);
+
+    const myPriceHelperInst = await deployProxy(PriceHelper, [], {
+      from: tokenOwner
+    });
+    console.log('myPriceHelper Deployed: ', myPriceHelperInst.address);
 
     const myProtocolinstance = await deployProxy(Protocol, [], { from: tokenOwner });
     console.log('myProtocol Deployed: ', myProtocolinstance.address);
@@ -89,8 +107,10 @@ module.exports = async (deployer, network, accounts) => {
     await myTrAFDTinst2.setRewardTokenAddress(myRewardTokeninstance.address, { from: tokenOwner });
     await myTrBFDTinst2.setRewardTokenAddress(myRewardTokeninstance.address, { from: tokenOwner });
 
-    const myRewardsDistribution = await deployProxy(RewardsDistribution, [myRewardTokeninstance.address, myMktHelperinstance.address], { from: tokenOwner });
+    const myRewardsDistribution = await deployProxy(RewardsDistribution, [myRewardTokeninstance.address, myMktHelperinstance.address, myPriceHelperInst.address], { from: tokenOwner });
     console.log('myRewardsDistribution Deployed: ', myRewardsDistribution.address);
+
+    await myPriceHelperInst.setControllerAddress(myRewardsDistribution.address, {from: tokenOwner})
 
   } 
 }

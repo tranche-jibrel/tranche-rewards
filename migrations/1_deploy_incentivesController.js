@@ -151,6 +151,6 @@ module.exports = async (deployer, network, accounts) => {
       });
     console.log('myIncentivesControllerInstance Deployed: ', myIncentivesControllerInstance.address);
 
-    myPriceHelperInst.setControllerAddress(myIncentivesControllerInstance.address, {from: tokenOwner})
+    await myPriceHelperInst.setControllerAddress(myIncentivesControllerInstance.address, {from: tokenOwner})
   }
 }

@@ -16,10 +16,13 @@ var Protocol = artifacts.require("./mocks/Protocol.sol");
 var TrancheAFDT = artifacts.require("./mocks/TrancheAToken.sol");
 var TrancheBFDT = artifacts.require("./mocks/TrancheBToken.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
+var Chainlink1 = artifacts.require("./mocks/Chainlink1.sol");
+var Chainlink2 = artifacts.require("./mocks/Chainlink2.sol");
 
 var IncentiveRewardsFactory = artifacts.require("./IncentiveRewardsFactory.sol");
 var Markets = artifacts.require("./Markets.sol");
 var MarketHelper = artifacts.require("./MarketHelper.sol");
+var PriceHelper = artifacts.require("./PriceHelper.sol");
 
 module.exports = async (deployer, network, accounts) => {
   const MYERC20_TOKEN_SUPPLY = new BN(5000000);
@@ -52,6 +55,21 @@ module.exports = async (deployer, network, accounts) => {
 
   if (network == "development") {
     const tokenOwner = accounts[0];
+
+    const myChainlink1Inst = await deployProxy(Chainlink1, [], {
+      from: tokenOwner
+    });
+    console.log('myChainlink1 Deployed: ', myChainlink1Inst.address);
+
+    const myChainlink2Inst = await deployProxy(Chainlink2, [], {
+      from: tokenOwner
+    });
+    console.log('myChainlink2 Deployed: ', myChainlink2Inst.address);
+
+    const myPriceHelperInst = await deployProxy(PriceHelper, [], {
+      from: tokenOwner
+    });
+    console.log('myPriceHelper Deployed: ', myPriceHelperInst.address);
 
     const myProtocolinstance = await deployProxy(Protocol, [], {
       from: tokenOwner
@@ -120,7 +138,7 @@ module.exports = async (deployer, network, accounts) => {
     });
     console.log('myMktHelperinstance Deployed: ', myMktHelperinstance.address);
 
-    const myMarketsInstance = await deployProxy(Markets, [myMktHelperinstance.address], {
+    const myMarketsInstance = await deployProxy(Markets, [myMktHelperinstance.address, myPriceHelperInst.address], {
       from: tokenOwner
     });
     console.log('myMarketsInstance Deployed: ', myMarketsInstance.address);
@@ -136,6 +154,8 @@ module.exports = async (deployer, network, accounts) => {
     await myMarketsInstance.setRewardsFactory(myStakingRewardsFactoryInstance.address, {
       from: tokenOwner
     })
+
+    await myPriceHelperInst.setControllerAddress(myMarketsInstance.address, {from: tokenOwner})
 
   }
 }

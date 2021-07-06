@@ -25,6 +25,7 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
 
     struct MarketRewards {
         uint256 underlyingPrice;  // scaled by 1e18
+        uint256 underlyingDecimals; 
         uint256 marketRewardsPercentage;  // scaled by 1e18
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;

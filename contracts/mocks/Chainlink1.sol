@@ -12,23 +12,23 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 
 contract Chainlink1 is AggregatorV3Interface, Initializable {
-    function decimals() external view override returns (uint8) {
+    function decimals() external pure override returns (uint8) {
         uint8 test = 8;
         return test;
     }
 
-    function description() external view override returns (string memory) {
+    function description() external pure override returns (string memory) {
         return "DAI / USD";
     }
 
-    function version() external view override returns (uint256) {
+    function version() external pure override returns (uint256) {
         return 1;
     }
 
     // getRoundData and latestRoundData should both raise "No data present"
     // if they do not have data to report, instead of returning unset values
     // which could be misinterpreted as actual reported values.
-    function getRoundData(uint80 _roundId) external view override returns (uint80 roundId,
+    function getRoundData(uint80 _roundId) external pure override returns (uint80 roundId,
         int256 answer,
         uint256 startedAt,
         uint256 updatedAt,
@@ -37,7 +37,7 @@ contract Chainlink1 is AggregatorV3Interface, Initializable {
             answer = 101234567;
         }
 
-    function latestRoundData() external view override returns (uint80 roundId,
+    function latestRoundData() external pure override returns (uint80 roundId,
         int256 answer,
         uint256 startedAt,
         uint256 updatedAt,

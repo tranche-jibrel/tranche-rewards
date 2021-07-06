@@ -14,6 +14,7 @@ import "./interfaces/IProtocol.sol";
 import "./interfaces/IRewardsDistribution.sol";
 import "./interfaces/IJTrancheTokens.sol";
 import "./interfaces/IMarketHelper.sol";
+import "./interfaces/IPriceHelper.sol";
 import "./math/SafeMathInt.sol";
 
 contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, IRewardsDistribution {
@@ -23,11 +24,14 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
     /**
      * @dev initialize contract
      * @param _token reward token address (SLICE or others)
+     * @param _mktHelper Address of markets helper contract
+     * @param _priceHelper Address of price helper contract
      */
-    function initialize (address _token, address _mktHelper) public initializer() {
+    function initialize (address _token, address _mktHelper, address _priceHelper) public initializer() {
         OwnableUpgradeable.__Ownable_init();
         rewardToken = _token;
         mktHelperAddress = _mktHelper;
+        priceHelperAddress = _priceHelper;
     }
 
     /**
@@ -40,6 +44,24 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
     }
 
     /**
+     * @dev set the address of the market helper contract
+     * @param _mktHelper market helper contract address
+     */
+    function setMarketHelperAddress(address _mktHelper) external onlyOwner {
+        require(_mktHelper != address(0), "IncentiveController: address not allowed");
+        mktHelperAddress = _mktHelper;
+    }
+
+    /**
+     * @dev set the address of the market helper contract
+     * @param _prcHelper market helper contract address
+     */
+    function setPriceHelperAddress(address _prcHelper) external onlyOwner {
+        require(_prcHelper != address(0), "IncentiveController: address not allowed");
+        priceHelperAddress = _prcHelper;
+    }
+
+    /**
      * @dev add a new market to this contract
      * @param _protocol protocol address
      * @param _protocolTrNumber protocol tranche number
@@ -47,7 +69,10 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
      * @param _rewardsFreq rewards frequency in days
-     * @param _underlyingPrice initial underlying price, in common currency (scaled by 1e18)
+     * @param _underlyingDecs underlying decimals
+     * @param _underlyingPrice underlying price
+     * @param _chainAggrInterface,chainlink price address
+     * @param _reciprocPrice,is reciprocal price or not
      */
     function addTrancheMarket(address _protocol, 
             uint256 _protocolTrNumber,
@@ -55,7 +80,10 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             uint256 _marketPercentage,
             uint256 _extProtReturn,
             uint256 _rewardsFreq,
-            uint256 _underlyingPrice) external onlyOwner{
+            uint256 _underlyingDecs,
+            uint256 _underlyingPrice,
+            address _chainAggrInterface,
+            bool _reciprocPrice) external onlyOwner{
         require(_balFactor <= uint256(1e18), "TokenRewards: balance factor too high");
         require(_marketPercentage <= uint256(1e18), "TokenRewards: market percentage too high");
         require(_rewardsFreq > 0 && _rewardsFreq < uint256(366), "TokenRewards: rewards frequency too high");
@@ -71,7 +99,14 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarketsRewards[marketsCounter].rewardsFrequency = _rewardsFreq * 1 days; // expressed in days
-        availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice; // scaled in 1e18
+        availableMarketsRewards[marketsCounter].underlyingDecimals = _underlyingDecs;
+
+        IPriceHelper(priceHelperAddress).setExternalProviderParameters(marketsCounter, _chainAggrInterface, _reciprocPrice);
+
+        if (_underlyingPrice > 0)
+            availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice;
+        else
+            availableMarketsRewards[marketsCounter].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(marketsCounter);
         
         emit NewMarketAdded(marketsCounter, availableMarkets[marketsCounter].protocol, availableMarkets[marketsCounter].protocolTrNumber,
             availableMarkets[marketsCounter].balanceFactor, availableMarkets[marketsCounter].extProtocolPercentage,
@@ -202,19 +237,37 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
      * @param _idxMarket market index
      * @param _price underlying price (scaled by 1e18)
      */
-    function setUnderlyingPriceSingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
-        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+    function setUnderlyingPriceManuallySingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
         availableMarketsRewards[_idxMarket].underlyingPrice = _price;
+    }
+
+    /**
+     * @dev set underlying price in common currency for a market (scaled by 1e18)
+     * @param _idxMarket market index
+     */
+    function setUnderlyingPriceFromChainlinkSingleMarket(uint256 _idxMarket) public onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
+        availableMarketsRewards[_idxMarket].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(_idxMarket);
     }
 
     /**
      * @dev set underlying price in common currency for all markets (scaled by 1e18)
      * @param _prices underlying prices array (scaled by 1e18)
      */
-    function setUnderlyingPriceAllMarkets(uint256[] memory _prices) external onlyOwner {
-        require(_prices.length == marketsCounter, "TokenRewards: Prices array not correct length");
+    function setUnderlyingPriceManuallyAllMarkets(uint256[] memory _prices) external onlyOwner {
+        require(_prices.length == marketsCounter, "IncentiveController: Prices array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarketsRewards[i].underlyingPrice = _prices[i];
+        }
+    }
+
+    /**
+     * @dev set underlying price in common currency for all markets (scaled by 1e18)
+     */
+    function setUnderlyingPriceFromChainlinkAllMarkets() external onlyOwner {
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            setUnderlyingPriceFromChainlinkSingleMarket(i);
         }
     }
     
@@ -234,6 +287,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         address _protocol;
         uint256 _trNum;
         uint256 _underPrice;
+        uint256 _underDecs;
         uint256 _mktTVL;
 
         for (uint i = 0; i < marketsCounter; i++) {
@@ -241,7 +295,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                _underDecs = availableMarketsRewards[i].underlyingDecimals;
+                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
                 // uint256 _mktTVLtmpMarketVal = _mktTVL.mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
                 uint256 percentTVL = _mktTVL.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
                 availableMarketsRewards[i].marketRewardsPercentage = percentTVL;
@@ -262,6 +317,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         address _protocol;
         uint256 _trNum;
         uint256 _underPrice;
+        uint256 _underDecs;
         uint256 tmpMarketVal;
 
         for (uint256 i = 0; i < marketsCounter; i++) {
@@ -269,7 +325,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                _underDecs = availableMarketsRewards[i].underlyingDecimals;
+                tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
                 allMarketTVL = allMarketTVL.add(tmpMarketVal);
             }
         }
@@ -290,7 +347,8 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
             uint256 _underPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
-            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+            uint256 _underDecs = availableMarketsRewards[_idxMarket].underlyingDecimals;
+            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
             marketShare = trancheVal.mul(1e18).div(totalValue);
         } else 
             marketShare = 0;
@@ -324,10 +382,11 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
             uint256 _underlyingPrice = availableMarketsRewards[_idxMarket].underlyingPrice; 
+            uint256 _underlyingDecs = availableMarketsRewards[_idxMarket].underlyingDecimals; 
             uint256 _extProtRet = availableMarkets[_idxMarket].extProtocolPercentage;
             uint256 _balFactor = availableMarkets[_idxMarket].balanceFactor;
             uint256 trBPercent = 
-                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _extProtRet, _balFactor));
+                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _underlyingDecs, _extProtRet, _balFactor));
             uint256 trBAmount = _amount.mul(trBPercent).div(1e18);
             uint256 trAAmount = _amount.sub(trBAmount);
             availableMarketsRewards[_idxMarket].trancheBRewardsAmount = trBAmount;
@@ -366,10 +425,11 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
         address _protocol = availableMarkets[_idxMarket].protocol;
         uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
         uint256 _underlyingPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
+        uint256 _underlyingDecs = availableMarketsRewards[_idxMarket].underlyingDecimals;
         if (availableMarkets[_idxMarket].enabled){
             if (availableMarketsRewards[_idxMarket].trancheARewardsAmount > 0) {
                 IJTrancheTokens(availableMarkets[_idxMarket].aTranche).updateFundsReceived();
-                uint256 trATVL = IMarketHelper(mktHelperAddress).getTrancheAMarketTVL(_protocol, _trNum, _underlyingPrice);
+                uint256 trATVL = IMarketHelper(mktHelperAddress).getTrancheAMarketTVL(_protocol, _trNum, _underlyingPrice, _underlyingDecs);
                 uint256 distribTimes = 365 days / availableMarketsRewards[_idxMarket].rewardsFrequency;
                 availableMarketsRewards[_idxMarket].rewardsTrAAPY = 
                         availableMarketsRewards[_idxMarket].trancheARewardsAmount.mul(distribTimes).mul(1e18).div(trATVL); // scaled by 1e18
@@ -377,7 +437,7 @@ contract RewardsDistribution is OwnableUpgradeable, RewardsDistributionStorage, 
             }
             if (availableMarketsRewards[_idxMarket].trancheBRewardsAmount > 0) {
                 IJTrancheTokens(availableMarkets[_idxMarket].bTranche).updateFundsReceived();
-                uint256 trBTVL = IMarketHelper(mktHelperAddress).getTrancheBMarketTVL(_protocol, _trNum, _underlyingPrice);
+                uint256 trBTVL = IMarketHelper(mktHelperAddress).getTrancheBMarketTVL(_protocol, _trNum, _underlyingPrice, _underlyingDecs);
                 uint256 distribTimes = 365 days / availableMarketsRewards[_idxMarket].rewardsFrequency;
                 availableMarketsRewards[_idxMarket].rewardsTrBAPY = 
                         availableMarketsRewards[_idxMarket].trancheBRewardsAmount.mul(distribTimes).mul(1e18).div(trBTVL); // scaled by 1e18

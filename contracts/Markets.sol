@@ -14,6 +14,7 @@ import "./interfaces/IProtocol.sol";
 import "./interfaces/IMarkets.sol";
 import "./interfaces/IMarketHelper.sol";
 import "./interfaces/IJTrancheTokens.sol";
+import "./interfaces/IPriceHelper.sol";
 import "./math/SafeMathInt.sol";
 
 
@@ -24,10 +25,12 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     /**
     * @dev initialize contract
     * @param _marketHelper markets helper contract address
+    * @param _priceHelper price helper contract Address
     */
-    function initialize (address _marketHelper) public initializer() {
+    function initialize (address _marketHelper, address _priceHelper) public initializer() {
         OwnableUpgradeable.__Ownable_init();
         mktHelperAddress = _marketHelper;
+        priceHelperAddress = _priceHelper;
     }
 
     modifier onlyRewardsFactory() {
@@ -59,7 +62,10 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
      * @param _rewardsFreq rewards frequency in days
+     * @param _underlyingDecs underlying decimals
      * @param _underlyingPrice initial underlying price, in common currency (scaled by 1e18)
+     * @param _chainAggrInterface,chainlink price address
+     * @param _reciprocPrice,is reciprocal price or not
      */
     function addTrancheMarket(address _protocol, 
             uint256 _protocolTrNumber,
@@ -67,7 +73,10 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
             uint256 _marketPercentage,
             uint256 _extProtReturn,
             uint256 _rewardsFreq,
-            uint256 _underlyingPrice) external onlyOwner{
+            uint256 _underlyingDecs,
+            uint256 _underlyingPrice,
+            address _chainAggrInterface,
+            bool _reciprocPrice) external onlyOwner{
         require(_balFactor <= uint256(1e18), "TokenRewards: balance factor too high");
         require(_marketPercentage <= uint256(1e18), "TokenRewards: market percentage too high");
         require(_rewardsFreq > 0 && _rewardsFreq < uint256(366), "TokenRewards: rewards frequency too high");
@@ -83,7 +92,14 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarketsRewards[marketsCounter].rewardsFrequency = _rewardsFreq * 1 days; // expressed in days
-        availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice; // scaled in 1e18
+        availableMarketsRewards[marketsCounter].underlyingDecimals = _underlyingDecs;
+
+        IPriceHelper(priceHelperAddress).setExternalProviderParameters(marketsCounter, _chainAggrInterface, _reciprocPrice);
+
+        if (_underlyingPrice > 0)
+            availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice;
+        else
+            availableMarketsRewards[marketsCounter].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(marketsCounter);
         
         emit NewMarketAdded(marketsCounter, availableMarkets[marketsCounter].protocol, availableMarkets[marketsCounter].protocolTrNumber,
             availableMarkets[marketsCounter].balanceFactor, availableMarkets[marketsCounter].extProtocolPercentage,
@@ -238,19 +254,37 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
      * @param _idxMarket market index
      * @param _price underlying price (scaled by 1e18)
      */
-    function setUnderlyingPriceSingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
-        require(_idxMarket < marketsCounter, "TokenRewards: Market does not exist");
+    function setUnderlyingPriceManuallySingleMarket(uint256 _idxMarket, uint256 _price) external onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
         availableMarketsRewards[_idxMarket].underlyingPrice = _price;
+    }
+
+    /**
+     * @dev set underlying price in common currency for a market (scaled by 1e18)
+     * @param _idxMarket market index
+     */
+    function setUnderlyingPriceFromChainlinkSingleMarket(uint256 _idxMarket) public onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
+        availableMarketsRewards[_idxMarket].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(_idxMarket);
     }
 
     /**
      * @dev set underlying price in common currency for all markets (scaled by 1e18)
      * @param _prices underlying prices array (scaled by 1e18)
      */
-    function setUnderlyingPriceAllMarkets(uint256[] memory _prices) external onlyOwner {
-        require(_prices.length == marketsCounter, "TokenRewards: Prices array not correct length");
+    function setUnderlyingPriceManuallyAllMarkets(uint256[] memory _prices) external onlyOwner {
+        require(_prices.length == marketsCounter, "IncentiveController: Prices array not correct length");
         for (uint256 i = 0; i < marketsCounter; i++) {
             availableMarketsRewards[i].underlyingPrice = _prices[i];
+        }
+    }
+
+    /**
+     * @dev set underlying price in common currency for all markets (scaled by 1e18)
+     */
+    function setUnderlyingPriceFromChainlinkAllMarkets() external onlyOwner {
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            setUnderlyingPriceFromChainlinkSingleMarket(i);
         }
     }
     
@@ -270,6 +304,7 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         address _protocol;
         uint256 _trNum;
         uint256 _underPrice;
+        uint256 _underDecs;
         uint256 _mktTVL;
 
         for (uint i = 0; i < marketsCounter; i++) {
@@ -277,7 +312,8 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                _underDecs = availableMarketsRewards[i].underlyingDecimals;
+                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
                 // uint256 tmpMarketVal = getTrancheMarketTVL(i).mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
                 uint256 percentTVL = _mktTVL.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
                 availableMarketsRewards[i].marketRewardsPercentage = percentTVL;
@@ -297,12 +333,17 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         uint256 allMarketTVL;
         address _protocol;
         uint256 _trNum;
+        uint256 _underPrice;
+        uint256 _underDecs;
+        uint256 tmpMarketVal;
 
         for (uint256 i = 0; i < marketsCounter; i++) {
             if (availableMarkets[i].enabled) {
                 _protocol = availableMarkets[i].protocol;
                 _trNum = availableMarkets[i].protocolTrNumber;
-                uint256 tmpMarketVal = (IProtocol(_protocol).getTotalValue(_trNum)).mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
+                _underPrice = availableMarketsRewards[i].underlyingPrice;
+                _underDecs = availableMarketsRewards[i].underlyingDecimals;
+                tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
                 allMarketTVL = allMarketTVL.add(tmpMarketVal);
             }
         }
@@ -323,7 +364,8 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
             uint256 _underPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
-            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+            uint256 _underDecs = availableMarketsRewards[_idxMarket].underlyingDecimals;
+            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
             marketShare = trancheVal.mul(1e18).div(totalValue);
         } else 
             marketShare = 0;
@@ -364,11 +406,12 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         if (_amount > 0 && _idxMarket < marketsCounter && availableMarkets[_idxMarket].enabled){
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
-            uint256 _underlyingPrice = availableMarketsRewards[_idxMarket].underlyingPrice; 
+            uint256 _underlyingPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
+            uint256 _underlyingDecs = availableMarketsRewards[_idxMarket].underlyingDecimals; 
             uint256 _extProtRet = availableMarkets[_idxMarket].extProtocolPercentage;
             uint256 _balFactor = availableMarkets[_idxMarket].balanceFactor;
             uint256 trBPercent = 
-                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _extProtRet, _balFactor));
+                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _underlyingDecs, _extProtRet, _balFactor));
             uint256 trBAmount = _amount.mul(trBPercent).div(1e18);
             uint256 trAAmount = _amount.sub(trBAmount);
             availableMarketsRewards[_idxMarket].trancheBRewardsAmount = trBAmount;

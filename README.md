@@ -77,7 +77,7 @@ Solidity Coverage (no ganache required):
 
 Every distribution mode requires different contract(s) to be deployed, that's why you can find 3 different files in migration and in test folders. The easiest way to test all contracts is to deploy 1 mode only per session and launch the related test file(s)
     
-Tests on Rewards Distribution is around 70% at the moment
+Tests on Rewards Distribution is around 91% at the moment
 
 Tests on Incentive Rewards Factory is around 95% at the moment
 
@@ -111,23 +111,23 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>IncentivesController</td>
-            <td><code>16.68 KiB</code></td>
+            <td><code>16.82 KiB</code></td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>1.81 KiB</code></td>
+            <td><code>1.82 KiB</code></td>
         </tr>
         <tr>
             <td>Markets</td>
-            <td><code>11.89 KiB</code></td>
+            <td><code>13.00 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsStorage</td>
-            <td><code>1.35 KiB</code></td>
+            <td><code>1.40 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsHelper</td>
-            <td><code>3.58 KiB</code></td>
+            <td><code>4.16 KiB</code></td>
         </tr>
         <tr>
             <td>PriceHelper</td>
@@ -139,11 +139,11 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>RewardsDistribution</td>
-            <td><code>12.21 KiB</code></td>
+            <td><code>13.32 KiB</code></td>
         </tr>
         <tr>
             <td>RewardsDistributionStorage</td>
-            <td><code>1.31 KiB</code></td>
+            <td><code>1.36 KiB</code></td>
         </tr>
     </tbody>
   </table>

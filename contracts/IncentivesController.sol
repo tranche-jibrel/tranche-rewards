@@ -29,12 +29,10 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _priceHelper Address of price helper contract
      */
     function initialize (address _token, address _mktHelper, address _priceHelper) public initializer() {
-        // require(_stakingRewardsGenesis >= block.timestamp, 'IncentiveRewardsFactory::constructor: genesis too soon');
         OwnableUpgradeable.__Ownable_init();
         rewardsTokenAddress = _token;
         mktHelperAddress = _mktHelper;
         priceHelperAddress = _priceHelper;
-        // stakingRewardsGenesis = _stakingRewardsGenesis;
     }
 
     /* ========== MODIFIERS ========== */
@@ -164,6 +162,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         address _protocol;
         uint256 _trNum;
         uint256 _underPrice;
+        uint256 _underDecs;
         uint256 tmpMarketVal;
 
         for (uint256 i = 0; i < marketsCounter; i++) {
@@ -173,7 +172,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
                 // if (_useChainlink)
                 //     setUnderlyingPriceFromChainlinkSingleMarket(i);
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                _underDecs = availableMarketsRewards[i].underlyingDecimals;
+                tmpMarketVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
                 allMarketTVL = allMarketTVL.add(tmpMarketVal);
             }
         }
@@ -196,7 +196,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             // if (_useChainlink)
             //     setUnderlyingPriceFromChainlinkSingleMarket(_idxMarket);
             uint256 _underPrice = availableMarketsRewards[_idxMarket].underlyingPrice;
-            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+            uint256 _underDecs = availableMarketsRewards[_idxMarket].underlyingDecimals;
+            uint256 trancheVal = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
             marketShare = trancheVal.mul(1e18).div(totalValue);
         } else 
             marketShare = 0;
@@ -263,6 +264,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _marketPercentage initial percantage for this market (scaled by 1e18)
      * @param _extProtReturn external protocol returns (compound, aave, and so on) (scaled by 1e18)
      * @param _rewardsDuration rewards duration (in seconds)
+     * @param _underlyingDecs underlying decimals
+     * @param _underlyingPrice underlying price
      * @param _chainAggrInterface,chainlink price address
      * @param _reciprocPrice,is reciprocal price or not
      */
@@ -272,6 +275,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             uint256 _marketPercentage,
             uint256 _extProtReturn,
             uint256 _rewardsDuration,
+            uint256 _underlyingDecs,
+            uint256 _underlyingPrice,
             address _chainAggrInterface,
             bool _reciprocPrice) external onlyOwner{
         require(_balFactor <= uint256(1e18), "IncentiveController: balance factor too high");
@@ -290,10 +295,14 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         availableMarkets[marketsCounter].extProtocolPercentage = _extProtReturn;  // percentage scaled by 10^18: 0 - 1e18 (i.e. 30000000000000000 = 0.03 * 1e18 = 3%)
         availableMarketsRewards[marketsCounter].marketRewardsPercentage = _marketPercentage;  // percentage scaled by 10^18: 0-18 (i.e. 500000000000000000 = 0.5 * 1e18 = 50%)
         availableMarketsRewards[marketsCounter].rewardsDuration = _rewardsDuration; // in seconds
+        availableMarketsRewards[marketsCounter].underlyingDecimals = _underlyingDecs;
 
         IPriceHelper(priceHelperAddress).setExternalProviderParameters(marketsCounter, _chainAggrInterface, _reciprocPrice);
 
-        availableMarketsRewards[marketsCounter].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(marketsCounter);
+        if (_underlyingPrice > 0)
+            availableMarketsRewards[marketsCounter].underlyingPrice = _underlyingPrice;
+        else
+            availableMarketsRewards[marketsCounter].underlyingPrice = IPriceHelper(priceHelperAddress).getNormalizedChainlinkPrice(marketsCounter);
 
         initRewardsSingleMarket(marketsCounter);
         
@@ -481,10 +490,11 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             address _protocol = availableMarkets[_idxMarket].protocol;
             uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
             uint256 _underlyingPrice = availableMarketsRewards[_idxMarket].underlyingPrice; 
+            uint256 _underlyingDecs = availableMarketsRewards[_idxMarket].underlyingDecimals; 
             uint256 _extProtRet = availableMarkets[_idxMarket].extProtocolPercentage;
             uint256 _balFactor = availableMarkets[_idxMarket].balanceFactor;
             uint256 trBPercent = 
-                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _extProtRet, _balFactor));
+                uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _underlyingDecs, _extProtRet, _balFactor));
             uint256 trBAmount = _rewardAmount.mul(trBPercent).div(1e18);
             uint256 trAAmount = _rewardAmount.sub(trBAmount);
 
@@ -655,6 +665,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         address _protocol;
         uint256 _trNum;
         uint256 _underPrice;
+        uint256 _underDecs;
         uint256 _mktTVL;
 
         for (uint i = 0; i < marketsCounter; i++) {
@@ -664,7 +675,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
                 // if (_useChainlink)
                 //     setUnderlyingPriceFromChainlinkSingleMarket(i);
                 _underPrice = availableMarketsRewards[i].underlyingPrice;
-                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice);
+                _underDecs = availableMarketsRewards[i].underlyingDecimals;
+                _mktTVL = IMarketHelper(mktHelperAddress).getTrancheMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
                 // uint256 _mktTVLtmpMarketVal = _mktTVL.mul(availableMarketsRewards[i].underlyingPrice).div(1e18);
                 uint256 percentTVL = _mktTVL.mul(1e18).div(allMarketsEnabledTVL); //percentage scaled 1e18
                 availableMarketsRewards[i].marketRewardsPercentage = percentTVL;

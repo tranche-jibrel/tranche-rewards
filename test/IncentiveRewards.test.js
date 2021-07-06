@@ -24,20 +24,27 @@ var Protocol = artifacts.require("./mocks/Protocol.sol");
 var TrancheAFDT = artifacts.require("./mocks/TrancheAToken.sol");
 var TrancheBFDT = artifacts.require("./mocks/TrancheBToken.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
+var Chainlink1 = artifacts.require("./mocks/Chainlink1.sol");
+var Chainlink2 = artifacts.require("./mocks/Chainlink2.sol");
 
 var IncentiveRewardsFactory = artifacts.require("./IncentiveRewardsFactory.sol");
 var IncentiveRewards = artifacts.require("./IncentiveRewards.sol");
 var Markets = artifacts.require("./Markets.sol");
 var MarketHelper = artifacts.require("./MarketHelper.sol");
+var PriceHelper = artifacts.require("./PriceHelper.sol");
 
 let protocolContract, trAFDTContract, trBFDTContract, rewardTokenContract, trAMarket, trBMarket;
-let incentiveRewardsFactoryContract, marketsContract, stakingRewardsTrA, stakingRewardsTrB;
+let incentiveRewardsFactoryContract, marketsContract, stakingRewardsTrA, stakingRewardsTrB, priceHelperContract, chainlink1Contract, chainlink2Contract;
 let owner, user1, user2, user3, user4;
 let rst1, res2, res3, res4;
 
 contract('Incentive Rewards', function (accounts) {
     const gasPrice = new BN('1');
     const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+    const MKT1_DECS = 18;
+    const MKT2_DECS = 18;
+
     /*
     Compound price: 21409027297510851 (trAPrice)
   
@@ -102,6 +109,16 @@ contract('Incentive Rewards', function (accounts) {
         expect(trBFDTContract.address).to.match(/0x[0-9a-fA-F]{40}/);
         // console.log(trBFDTContract.address);
 
+        chainlink1Contract = await Chainlink1.deployed();
+        expect(chainlink1Contract.address).to.be.not.equal(ZERO_ADDRESS);
+        expect(chainlink1Contract.address).to.match(/0x[0-9a-fA-F]{40}/);
+        chainlink2Contract = await Chainlink2.deployed();
+        expect(chainlink2Contract.address).to.be.not.equal(ZERO_ADDRESS);
+        expect(chainlink2Contract.address).to.match(/0x[0-9a-fA-F]{40}/);
+        priceHelperContract = await PriceHelper.deployed();
+        expect(priceHelperContract.address).to.be.not.equal(ZERO_ADDRESS);
+        expect(priceHelperContract.address).to.match(/0x[0-9a-fA-F]{40}/);
+
         rewardTokenContract = await RewardToken.deployed();
         expect(rewardTokenContract.address).to.be.not.equal(ZERO_ADDRESS);
         expect(rewardTokenContract.address).to.match(/0x[0-9a-fA-F]{40}/);
@@ -154,7 +171,7 @@ contract('Incentive Rewards', function (accounts) {
             await marketsContract.setRewardsFactory(incentiveRewardsFactoryContract.address);
 
             tx = await marketsContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_TRANCHE_PERCENTAGE,
-                MY_EXT_PROT_RET, 7, web3.utils.toWei("1", "ether"), {
+                MY_EXT_PROT_RET, 7, MKT1_DECS, web3.utils.toWei('1'), chainlink1Contract.address, false, {
                     from: owner
                 });
 
@@ -162,7 +179,7 @@ contract('Incentive Rewards', function (accounts) {
 
             res1 = await marketsContract.availableMarkets(0)
             res2 = await marketsContract.availableMarketsRewards(0)
-            console.log("Total TVL in Market0: " + (web3.utils.fromWei(await marketHelperContract.getTrancheMarketTVL(res1[0], res1[5], res2[0])).toString()))
+            console.log("Total TVL in Market0: " + (web3.utils.fromWei(await marketHelperContract.getTrancheMarketTVL(res1[0], res1[5], res2[0], MKT1_DECS)).toString()))
             // ret3 = await marketsContract.availableMarkets(1)
             // ret4 = await marketsContract.availableMarketsRewards(1)
             // console.log("Total TVL in Market1: " + (web3.utils.fromWei(await marketHelperContract.getTrancheMarketTVL(ret3[0], ret3[5], ret4[0])).toString()))
@@ -171,9 +188,9 @@ contract('Incentive Rewards', function (accounts) {
 
             count = await marketsContract.marketsCounter();
             console.log("Count markets: " + count)
-            trATVL = await marketHelperContract.getTrancheAMarketTVL(res1[0], res1[5], res2[0]);
-            trBTVL = await marketHelperContract.getTrancheBMarketTVL(res1[0], res1[5], res2[0]);
-            totTrTVL = await marketHelperContract.getTrancheMarketTVL(res1[0], res1[5], res2[0]);
+            trATVL = await marketHelperContract.getTrancheAMarketTVL(res1[0], res1[5], res2[0], MKT1_DECS);
+            trBTVL = await marketHelperContract.getTrancheBMarketTVL(res1[0], res1[5], res2[0], MKT1_DECS);
+            totTrTVL = await marketHelperContract.getTrancheMarketTVL(res1[0], res1[5], res2[0], MKT1_DECS);
             console.log("trATVL: " + web3.utils.fromWei(trATVL, "ether") + ", trBTVL: " +
                 web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether"));
             mktShare = await marketsContract.getMarketSharePerTranche(0);
@@ -183,9 +200,9 @@ contract('Incentive Rewards', function (accounts) {
         it('read values from tranches', async function () {
             trARet = await marketHelperContract.getTrancheAReturns(res1[0], res1[5]);
             console.log("tranche A return: " + web3.utils.fromWei(trARet) * 100 + " %");
-            trBRet = await marketHelperContract.getTrancheBReturns(res1[0], res1[5], res2[0], res1[7]);
+            trBRet = await marketHelperContract.getTrancheBReturns(res1[0], res1[5], res2[0], MKT1_DECS, res1[7]);
             console.log("tranche B return: " + web3.utils.fromWei(trBRet) * 100 + " %");
-            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res1[0], res1[5], res2[0], res1[7], res1[6]);
+            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res1[0], res1[5], res2[0], MKT1_DECS, res1[7], res1[6]);
             console.log("tranche B rewards percentage: " + web3.utils.fromWei(trBRewPerc) * 100 + " %");
             trARewPerc = ether('1').sub(trBRewPerc);
             console.log("tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
@@ -405,6 +422,43 @@ contract('Incentive Rewards', function (accounts) {
             console.log("TrA Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
             res = await incentiveRewardsFactoryContract.incentiveRewardsInfoByStakingToken(stkAddressB)
             console.log("TrB Staking: " + res[0].toString() + ", Rewards: " + web3.utils.fromWei(res[1].toString()) + ", Duration: " + res[2].toString())
+        });
+    });
+
+    describe('Getting normalized prices from chainlink mockups', function () {
+        it('call one shot function and read values', async function () {
+            res = await priceHelperContract.getLatestChainlinkPairInfo(0);
+            console.log(res[0]+ ": "+res[1].toString() + " - Decs: "+ res[2].toString())
+
+            // res = await priceHelperContract.getLatestChainlinkPairInfo(1);
+            // console.log(res[0]+ ": "+res[1].toString() + " - Decs: "+ res[2].toString())
+
+            await marketsContract.setUnderlyingPriceFromChainlinkAllMarkets();
+            res = await marketsContract.availableMarketsRewards(0);
+            console.log(res[0].toString())
+            // res = await marketsContract.availableMarketsRewards(1);
+            // console.log(res[0].toString())
+
+            res = await priceHelperContract.reciprocal(res[0])
+            console.log(res.toString())
+        });
+
+        it('and now something unnecessary, just to have a greater test coverage', async function () {
+            await marketsContract.enableAllMarket([false], {from: owner})
+            await marketsContract.enableSingleMarket(0, true, {from: owner})
+            await marketsContract.setRewardsFactory(incentiveRewardsFactoryContract.address, {from: owner})
+            await marketsContract.setMarketAddress(priceHelperContract.address, {from: owner})
+            await marketsContract.setRewardsFrequencyAllMarkets([10], {from: owner})
+            await marketsContract.setRewardsFrequencySingleMarket(0, 7, {from: owner})
+            await marketsContract.setRewardsPercentageAllMarkets([web3.utils.toWei("0.5")], {from: owner})
+            await marketsContract.setRewardsPercentageSingleMarket(0, web3.utils.toWei("0.5"), {from: owner})
+            await marketsContract.setExtProtocolPercentAllMarkets([web3.utils.toWei("0.03")], {from: owner})
+            await marketsContract.setExtProtocolPercentSingleMarket(0, web3.utils.toWei("0.033"), {from: owner})
+            await marketsContract.setBalanceFactorAllMarkets([web3.utils.toWei("0.6")], {from: owner})
+            await marketsContract.setBalanceFactorSingleMarket(0, web3.utils.toWei("0.5"), {from: owner})
+            await marketsContract.setUnderlyingPriceManuallyAllMarkets([web3.utils.toWei("1.02")], {from: owner})
+            await marketsContract.setUnderlyingPriceManuallySingleMarket(0, web3.utils.toWei("1.01111"), {from: owner})
+            await marketsContract.emergencyTokenTransfer(rewardTokenContract.address, user1, 0, {from: owner})
         });
     });
 

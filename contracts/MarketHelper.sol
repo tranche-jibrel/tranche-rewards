@@ -33,8 +33,14 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
      */
     function getTrancheAMarketTVL(address _protocol, 
             uint256 _protTrNum, 
-            uint256 _underlyingPrice) public view override returns(uint256 trancheATVL) {
-        trancheATVL = (IProtocol(_protocol).getTrAValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
+            uint256 _underlyingPrice,
+            uint256 _underlyingDecs) public view override returns(uint256 trancheATVL) {
+        require(_underlyingDecs <= 18, "MarketHelper: too many decimals");
+        uint256 decsDiff = uint256(18).sub(_underlyingDecs);
+        if (decsDiff > 0)
+            trancheATVL = (IProtocol(_protocol).getTrAValue(_protTrNum)).mul(_underlyingPrice).mul(10**decsDiff).div(1e18);
+        else
+            trancheATVL = (IProtocol(_protocol).getTrAValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
         return trancheATVL;
     }
 
@@ -47,8 +53,14 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
      */
     function getTrancheBMarketTVL(address _protocol, 
             uint256 _protTrNum, 
-            uint256 _underlyingPrice) public view override returns(uint256 trancheBTVL) {
-        trancheBTVL = (IProtocol(_protocol).getTrBValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
+            uint256 _underlyingPrice,
+            uint256 _underlyingDecs) public view override returns(uint256 trancheBTVL) {
+        require(_underlyingDecs <= 18, "MarketHelper: too many decimals");
+        uint256 decsDiff = uint256(18).sub(_underlyingDecs);
+        if (decsDiff > 0)
+            trancheBTVL = (IProtocol(_protocol).getTrAValue(_protTrNum)).mul(_underlyingPrice).mul(10**decsDiff).div(1e18);
+        else
+            trancheBTVL = (IProtocol(_protocol).getTrBValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
         return trancheBTVL;
     }
 
@@ -61,9 +73,10 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
      */
     function getTrancheMarketTVL(address _protocol, 
             uint256 _protTrNum, 
-            uint256 _underlyingPrice) public view override returns(uint256 trancheTVL) {
-        uint256 trATVL = getTrancheAMarketTVL(_protocol, _protTrNum, _underlyingPrice);
-        uint256 trBTVL = getTrancheBMarketTVL(_protocol, _protTrNum, _underlyingPrice);
+            uint256 _underlyingPrice,
+            uint256 _underlyingDecs) public view override returns(uint256 trancheTVL) {
+        uint256 trATVL = getTrancheAMarketTVL(_protocol, _protTrNum, _underlyingPrice, _underlyingDecs);
+        uint256 trBTVL = getTrancheBMarketTVL(_protocol, _protTrNum, _underlyingPrice, _underlyingDecs);
         trancheTVL = trATVL.add(trBTVL);
         return trancheTVL;
     }
@@ -96,11 +109,12 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
     function getTrancheBReturns(address _protocol, 
             uint256 _protTrNum, 
             uint256 _underlyingPrice, 
+            uint256 _underlyingDecs,
             uint256 _extProtRet) public view returns (int256 trBReturns) {
         uint256 trAReturns = getTrancheAReturns(_protocol, _protTrNum);
         uint256 trARetPercent = trAReturns.add(1e18); //(1+trARet)
-        uint256 totTrancheTVL = getTrancheMarketTVL(_protocol, _protTrNum, _underlyingPrice);
-        uint256 trATVL = getTrancheAMarketTVL(_protocol, _protTrNum, _underlyingPrice);
+        uint256 totTrancheTVL = getTrancheMarketTVL(_protocol, _protTrNum, _underlyingPrice,_underlyingDecs);
+        uint256 trATVL = getTrancheAMarketTVL(_protocol, _protTrNum, _underlyingPrice,_underlyingDecs);
         uint256 trBTVL = totTrancheTVL.sub(trATVL);
         uint256 totRetPercent = _extProtRet.add(1e18); //(1+extProtRet)
 
@@ -123,9 +137,10 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
     function getTrancheBRewardsPercentage(address _protocol, 
             uint256 _protTrNum, 
             uint256 _underlyingPrice, 
+            uint256 _underlyingDecs,
             uint256 _extProtRet, 
             uint256 _balFactor) external view override returns (int256 trBRewardsPercentage) {
-        int256 trBReturns = int256(getTrancheBReturns(_protocol, _protTrNum, _underlyingPrice, _extProtRet));
+        int256 trBReturns = int256(getTrancheBReturns(_protocol, _protTrNum, _underlyingPrice, _underlyingDecs, _extProtRet));
         int256 deltaAPY = int256(_extProtRet).sub(trBReturns); // extProtRet - trancheBReturn = DeltaAPY
         int256 deltaAPYPercentage = deltaAPY.mul(1e18).div(int256(_extProtRet)); // DeltaAPY / extProtRet = DeltaAPYPercentage
         trBRewardsPercentage = deltaAPYPercentage.add(int256(_balFactor)); // DeltaAPYPercentage + balanceFactor = trBPercentage
