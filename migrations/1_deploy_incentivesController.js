@@ -21,35 +21,36 @@ var MarketHelper = artifacts.require("./MarketHelper.sol");
 var IncentivesController = artifacts.require("./IncentivesController.sol");
 
 module.exports = async (deployer, network, accounts) => {
-  const MYERC20_TOKEN_SUPPLY = new BN(5000000);
-
-  // createTranche(address _trA,
-  //   address _trB,
-  //   uint256 _trAVal,
-  //   uint256 _trBVal,
-  //   uint256 _trARBP,
-  //   uint256 _trAPrice)
-  /*
-  TrARPB: 305494111 (3%)
-          407325481 (4%)
-          509156852 (5%)
-          203662741 (2%)
-          101831370 (1%)
-  */
-  const MY_TRANCHE_A_RPB = new BN("305494111");
-  const MY_TRANCHE_A_PRICE = new BN("21409027297510851")
-  const MY_TRANCHE_A_RPB2 = new BN("203662741");
-  const MY_TRANCHE_A_PRICE2 = new BN("23569787412556962")
-  // const MY_TRANCHE_A_PRICE_NUM =  Number(web3.utils.fromWei("21409027297510851", "ether"))
-
-  // const MY_TRANCHE_A_TVL = new BN("1000");
-  // const MY_TRANCHE_B_TVL = new BN("2000");
-
-  // let MY_TRANCHE_A_SUPPLY = new BN(MY_TRANCHE_A_TVL / MY_TRANCHE_A_PRICE_NUM);
-  // let MY_TRANCHE_B_SUPPLY = new BN(MY_TRANCHE_B_TVL);
-  //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
   if (network == "development") {
+    const MYERC20_TOKEN_SUPPLY = new BN(5000000);
+
+    // createTranche(address _trA,
+    //   address _trB,
+    //   uint256 _trAVal,
+    //   uint256 _trBVal,
+    //   uint256 _trARBP,
+    //   uint256 _trAPrice)
+    /*
+    TrARPB: 305494111 (3%)
+            407325481 (4%)
+            509156852 (5%)
+            203662741 (2%)
+            101831370 (1%)
+    */
+    const MY_TRANCHE_A_RPB = new BN("305494111");
+    const MY_TRANCHE_A_PRICE = new BN("21409027297510851")
+    const MY_TRANCHE_A_RPB2 = new BN("203662741");
+    const MY_TRANCHE_A_PRICE2 = new BN("23569787412556962")
+    // const MY_TRANCHE_A_PRICE_NUM =  Number(web3.utils.fromWei("21409027297510851", "ether"))
+
+    // const MY_TRANCHE_A_TVL = new BN("1000");
+    // const MY_TRANCHE_B_TVL = new BN("2000");
+
+    // let MY_TRANCHE_A_SUPPLY = new BN(MY_TRANCHE_A_TVL / MY_TRANCHE_A_PRICE_NUM);
+    // let MY_TRANCHE_B_SUPPLY = new BN(MY_TRANCHE_B_TVL);
+    //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
     const tokenOwner = accounts[0];
 
     const myProtocolinstance = await deployProxy(Protocol, [], {
@@ -74,8 +75,8 @@ module.exports = async (deployer, network, accounts) => {
 
     await myProtocolinstance.createTranche(myTrAFDTinstance.address, myTrBFDTinstance.address,
       0, 0, MY_TRANCHE_A_RPB, MY_TRANCHE_A_PRICE, {
-        from: tokenOwner
-      });
+      from: tokenOwner
+    });
     count = await myProtocolinstance.trCounter();
     tranchePar = await myProtocolinstance.tranchesMocks(count.toNumber() - 1)
     console.log('count: ', count.toNumber(), ', myTrancheMocks: ', tranchePar[0].toString(),
@@ -93,8 +94,8 @@ module.exports = async (deployer, network, accounts) => {
 
     await myProtocolinstance.createTranche(myTrAFDTinst2.address, myTrBFDTinst2.address,
       0, 0, MY_TRANCHE_A_RPB2, MY_TRANCHE_A_PRICE2, {
-        from: tokenOwner
-      });
+      from: tokenOwner
+    });
     count = await myProtocolinstance.trCounter();
     tranchePar = await myProtocolinstance.tranchesMocks(count.toNumber() - 1)
     console.log('count: ', count.toNumber(), ', myTrancheMocks: ', tranchePar[0].toString(),
@@ -132,5 +133,38 @@ module.exports = async (deployer, network, accounts) => {
         from: tokenOwner
       });
     console.log('myIncentivesControllerInstance Deployed: ', myIncentivesControllerInstance.address);
+  } else if (network == "kovan") {
+    const { SLICE_ADDRESS, PROTOCOL_ADDRESS } = process.env;
+    console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS)
+    const tokenOwner = accounts[0];
+    const myMktHelperinstance = await deployProxy(MarketHelper, [], {
+      from: tokenOwner
+    });
+    console.log('MARKET_HELPER_ADDRESS=' + myMktHelperinstance.address);
+    const SIRInstance = await deployProxy(IncentivesController, [SLICE_ADDRESS, myMktHelperinstance.address], {
+      from: tokenOwner
+    });
+    console.log('SIR_ADDRESS=' + SIRInstance.address);
+    console.log('control in adding first tranche')
+    await SIRInstance.addTrancheMarket(PROTOCOL_ADDRESS,
+      0, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.03'), // 3% external protocol return
+      300, // 5 minute 
+      web3.utils.toWei("1"), // underlying price
+      { from: tokenOwner });
+    console.log('control in adding second tranche')
+    await SIRInstance.addTrancheMarket(PROTOCOL_ADDRESS,
+      1, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.03'), // 3% external protocol return
+      300, // 5 minute 
+      web3.utils.toWei("1"), // underlying price
+      { from: tokenOwner });
+    console.log('refresh slice speed')
+    await SIRInstance.refreshSliceSpeeds();
+
   }
 }
