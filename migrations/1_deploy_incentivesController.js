@@ -16,8 +16,11 @@ var Protocol = artifacts.require("./mocks/Protocol.sol");
 var TrancheAFDT = artifacts.require("./mocks/TrancheAToken.sol");
 var TrancheBFDT = artifacts.require("./mocks/TrancheBToken.sol");
 var RewardToken = artifacts.require("./mocks/RewardERC20.sol");
+var Chainlink1 = artifacts.require("./mocks/Chainlink1.sol");
+var Chainlink2 = artifacts.require("./mocks/Chainlink2.sol");
 
 var MarketHelper = artifacts.require("./MarketHelper.sol");
+var PriceHelper = artifacts.require("./PriceHelper.sol");
 var IncentivesController = artifacts.require("./IncentivesController.sol");
 
 module.exports = async (deployer, network, accounts) => {
@@ -52,6 +55,21 @@ module.exports = async (deployer, network, accounts) => {
     //const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
     const tokenOwner = accounts[0];
+
+    const myChainlink1Inst = await deployProxy(Chainlink1, [], {
+      from: tokenOwner
+    });
+    console.log('myChainlink1 Deployed: ', myChainlink1Inst.address);
+
+    const myChainlink2Inst = await deployProxy(Chainlink2, [], {
+      from: tokenOwner
+    });
+    console.log('myChainlink2 Deployed: ', myChainlink2Inst.address);
+
+    const myPriceHelperInst = await deployProxy(PriceHelper, [], {
+      from: tokenOwner
+    });
+    console.log('myPriceHelper Deployed: ', myPriceHelperInst.address);
 
     const myProtocolinstance = await deployProxy(Protocol, [], {
       from: tokenOwner
@@ -129,10 +147,11 @@ module.exports = async (deployer, network, accounts) => {
     console.log(genesisDate)
 
     const myIncentivesControllerInstance =
-      await deployProxy(IncentivesController, [myRewardTokeninstance.address, myMktHelperinstance.address], {
+      await deployProxy(IncentivesController, [myRewardTokeninstance.address, myMktHelperinstance.address, myPriceHelperInst.address], {
         from: tokenOwner
       });
     console.log('myIncentivesControllerInstance Deployed: ', myIncentivesControllerInstance.address);
+    myPriceHelperInst.setControllerAddress(myIncentivesControllerInstance.address, {from: tokenOwner})
   } else if (network == "kovan") {
     const { SLICE_ADDRESS, PROTOCOL_ADDRESS } = process.env;
     console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS)
@@ -166,5 +185,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log('refresh slice speed')
     await SIRInstance.refreshSliceSpeeds();
 
+
+   
   }
 }

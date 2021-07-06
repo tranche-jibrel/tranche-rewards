@@ -46,6 +46,7 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     address public rewardFactoryAddress;
     address public rewardsTokenAddress;
     address public mktHelperAddress;
+    address public priceHelperAddress;
 
     mapping(uint256 => Market) public availableMarkets;
     mapping(uint256 => MarketRewards) public availableMarketsRewards;
