@@ -577,6 +577,11 @@
     "@babel/helper-validator-identifier" "^7.14.5"
     to-fast-properties "^2.0.0"
 
+"@chainlink/contracts@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.2.0.tgz#0d9c2f2a9036e4a8560238da4133910c4c8b14e5"
+  integrity sha512-p6E8gZBr16V+geJjYRxixwkEjk0fci8ARSszzHxSqJY81/Ja6Z0K7uVb+Fq9iTvEDbBQjFV9Tnvym/a3Q6+1GQ==
+
 "@consento/sync-randombytes@^1.0.4", "@consento/sync-randombytes@^1.0.5":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@consento/sync-randombytes/-/sync-randombytes-1.0.5.tgz#5be6bc58c6a6fa6e09f04cc684d037e29e6c28d5"
