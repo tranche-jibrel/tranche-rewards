@@ -158,7 +158,6 @@ module.exports = async (deployer, network, accounts) => {
     const { SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS } = process.env;
     console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS)
     const tokenOwner = accounts[0];
-
     const marketHelper = await deployProxy(MarketHelper, [], {
       from: tokenOwner
     });
@@ -202,5 +201,8 @@ module.exports = async (deployer, network, accounts) => {
       { from: tokenOwner });
     console.log('refresh slice speed')
     await SIRInstance.refreshSliceSpeeds();
+    console.log('approve slice amount');
+    let sliceInstance = await RewardToken.at(SLICE_ADDRESS);
+    await sliceInstance.approve(SIRInstance.address, "" + (10 ** 18) * 30000)
   }
 }
