@@ -419,6 +419,27 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
     }
 
     /**
+     * @dev set decimals for a market
+     * @param _idxMarket market index
+     * @param _underDecs underlying decimals
+     */
+    function setUnderlyingDecimalsSingleMarket(uint256 _idxMarket, uint256 _underDecs) external onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
+        availableMarketsRewards[_idxMarket].underlyingDecimals = _underDecs;
+    }
+
+    /**
+     * @dev set decimals for all markets
+     * @param _underDecs underlying decimals
+     */
+    function setUnderlyingDecimalsAllMarkets(uint256[] memory _underDecs) external onlyOwner {
+        require(_underDecs.length == marketsCounter, "IncentiveController: underlying decimals array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarketsRewards[i].underlyingDecimals = _underDecs[i];
+        }
+    }
+
+    /**
      * @dev set underlying price in common currency for a market (scaled by 1e18)
      * @param _idxMarket market index
      * @param _price underlying price (scaled by 1e18)
@@ -493,7 +514,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             uint256 _underlyingDecs = availableMarketsRewards[_idxMarket].underlyingDecimals; 
             uint256 _extProtRet = availableMarkets[_idxMarket].extProtocolPercentage;
             uint256 _balFactor = availableMarkets[_idxMarket].balanceFactor;
-            uint256 trBPercent = 
+            uint256 trBPercent =
                 uint256(IMarketHelper(mktHelperAddress).getTrancheBRewardsPercentage(_protocol, _trNum, _underlyingPrice, _underlyingDecs, _extProtRet, _balFactor));
             uint256 trBAmount = _rewardAmount.mul(trBPercent).div(1e18);
             uint256 trAAmount = _rewardAmount.sub(trBAmount);

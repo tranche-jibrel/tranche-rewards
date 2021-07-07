@@ -15,8 +15,6 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
         address protocol;
         address aTranche;
         address bTranche;
-        address stakingATranche;
-        address stakingBTranche;
         uint256 protocolTrNumber;
         uint256 balanceFactor;  // scaled by 1e18
         uint256 extProtocolPercentage;  // scaled by 1e18
@@ -30,8 +28,6 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;
         uint256 rewardsDuration;  // in days
-        uint256 rewardsTrAAPY; // scaled by 1e18
-        uint256 rewardsTrBAPY; // scaled by 1e18
     }
 
     struct RewardsInfo {

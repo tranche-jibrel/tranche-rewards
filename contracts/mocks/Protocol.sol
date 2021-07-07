@@ -17,7 +17,6 @@ contract Protocol is IProtocol, Initializable {
         uint256 totalTrValue;
         uint256 trancheACurrentRPB;
         uint256 storedTrancheAPrice;
-        //uint256 extProtRPB;
     }
 
     struct TrancheAddresses {
@@ -91,14 +90,6 @@ contract Protocol is IProtocol, Initializable {
 
     function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) external view override returns (uint256){}
 
-/*    function setExtProtRPB(uint256 _trancheNum, uint256 _newRPB) external {
-        tranchesMocks[_trancheNum].extProtRPB = _newRPB;
-    }
-
-    function getExtProtRPB(uint256 _trancheNum) external view override returns (uint256) {
-        return tranchesMocks[_trancheNum].extProtRPB;
-    }
-*/
     function setTrancheACurrentRPB(uint256 _trancheNum, uint256 _newRPB) external {
         tranchesMocks[_trancheNum].trancheACurrentRPB = _newRPB;
     }

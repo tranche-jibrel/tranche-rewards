@@ -280,20 +280,20 @@ contract('Incentive Controller', function (accounts) {
         });
 
         it('read values and distribute rewards to tranches', async function () {
-            trARet = await marketHelperContract.getTrancheAReturns(res1[0], res1[5]);
+            trARet = await marketHelperContract.getTrancheAReturns(res1[0], res1[3]);
             console.log("mkt0 tranche A return: " + web3.utils.fromWei(trARet) * 100 + " %");
-            trBRet = await marketHelperContract.getTrancheBReturns(res1[0], res1[5], res2[0], MKT1_DECS, res1[7]);
+            trBRet = await marketHelperContract.getTrancheBReturns(res1[0], res1[3], res2[0], MKT1_DECS, res1[5]);
             console.log("mkt0 tranche B return: " + web3.utils.fromWei(trBRet) * 100 + " %");
-            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res1[0], res1[5], res2[0], MKT1_DECS, res1[7], res1[6]);
+            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res1[0], res1[3], res2[0], MKT1_DECS, res1[5], res1[4]);
             console.log("mkt0 tranche B rewards percentage: " + web3.utils.fromWei(trBRewPerc) * 100 + " %");
             trARewPerc = ether('1').sub(trBRewPerc);
             console.log("mkt0 tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
 
-            trARet = await marketHelperContract.getTrancheAReturns(res3[0], res3[5]);
+            trARet = await marketHelperContract.getTrancheAReturns(res3[0], res3[3]);
             console.log("mkt1 tranche A return: " + web3.utils.fromWei(trARet) * 100 + " %");
-            trBRet = await marketHelperContract.getTrancheBReturns(res3[0], res3[5], res4[0], MKT2_DECS, res3[7]);
+            trBRet = await marketHelperContract.getTrancheBReturns(res3[0], res3[3], res4[0], MKT2_DECS, res3[5]);
             console.log("mkt1 tranche B return: " + web3.utils.fromWei(trBRet) * 100 + " %");
-            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res3[0], res3[5], res4[0], MKT2_DECS, res3[7], res3[6]);
+            trBRewPerc = await marketHelperContract.getTrancheBRewardsPercentage(res3[0], res3[3], res4[0], MKT2_DECS, res3[5], res3[4]);
             console.log("mkt1 tranche B rewards percentage: " + web3.utils.fromWei(trBRewPerc) * 100 + " %");
             trARewPerc = ether('1').sub(trBRewPerc);
             console.log("mkt1 tranche A rewards percentage: " + web3.utils.fromWei(trARewPerc) * 100 + " %");
@@ -705,6 +705,8 @@ contract('Incentive Controller', function (accounts) {
         });
 
         it('and now something unnecessary, just to have a greater test coverage', async function () {
+            await rewardTokenContract.approve(incentiveControllerContract.address, web3.utils.toWei("300"), {from: owner})
+            await incentiveControllerContract.updateRewardsSingleMarket(0, web3.utils.toWei("300"), 86400, {from: owner}) 
             await incentiveControllerContract.enableAllMarket([false, false], {from: owner})
             await incentiveControllerContract.enableSingleMarket(0, true, {from: owner})
             await incentiveControllerContract.enableSingleMarket(1, true, {from: owner})
@@ -720,6 +722,8 @@ contract('Incentive Controller', function (accounts) {
             await incentiveControllerContract.setBalanceFactorSingleMarket(0, web3.utils.toWei("0.5"), {from: owner})
             await incentiveControllerContract.setUnderlyingPriceManuallyAllMarkets([web3.utils.toWei("1.02"), web3.utils.toWei("1.01")], {from: owner})
             await incentiveControllerContract.setUnderlyingPriceManuallySingleMarket(0, web3.utils.toWei("1.01111"), {from: owner})
+            await incentiveControllerContract.setUnderlyingDecimalsAllMarkets([6, 18], {from: owner})
+            await incentiveControllerContract.setUnderlyingDecimalsSingleMarket(0, 18, {from: owner})
             await incentiveControllerContract.emergencyTokenTransfer(rewardTokenContract.address, user1, 0, {from: owner})
         });
     });

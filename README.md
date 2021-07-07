@@ -81,7 +81,7 @@ Tests on Rewards Distribution is around 91% at the moment
 
 Tests on Incentive Rewards Factory is around 95% at the moment
 
-Tests on Incentive Controller contract is around 97% at the moment
+Tests on Incentive Controller contract is around 99% at the moment
 
 ## Contracts Size (main contracts, no interfaces, no test contracts)
 Limit is 24 KiB for single contract
@@ -111,19 +111,19 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>IncentivesController</td>
-            <td><code>16.82 KiB</code></td>
+            <td><code>17.19 KiB</code></td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>1.82 KiB</code></td>
+            <td><code>1.75 KiB</code></td>
         </tr>
         <tr>
             <td>Markets</td>
-            <td><code>13.00 KiB</code></td>
+            <td><code>13.29 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsStorage</td>
-            <td><code>1.40 KiB</code></td>
+            <td><code>1.37 KiB</code></td>
         </tr>
         <tr>
             <td>MarketsHelper</td>
@@ -139,7 +139,7 @@ Limit is 24 KiB for single contract
         </tr>
         <tr>
             <td>RewardsDistribution</td>
-            <td><code>13.32 KiB</code></td>
+            <td><code>13.72 KiB</code></td>
         </tr>
         <tr>
             <td>RewardsDistributionStorage</td>

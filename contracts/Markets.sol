@@ -250,6 +250,27 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
     }
 
     /**
+     * @dev set decimals for a market
+     * @param _idxMarket market index
+     * @param _underDecs underlying decimals
+     */
+    function setUnderlyingDecimalsSingleMarket(uint256 _idxMarket, uint256 _underDecs) external onlyOwner {
+        require(_idxMarket < marketsCounter, "IncentiveController: Market does not exist");
+        availableMarketsRewards[_idxMarket].underlyingDecimals = _underDecs;
+    }
+
+    /**
+     * @dev set decimals for all markets
+     * @param _underDecs underlying decimals
+     */
+    function setUnderlyingDecimalsAllMarkets(uint256[] memory _underDecs) external onlyOwner {
+        require(_underDecs.length == marketsCounter, "IncentiveController: underlying decimals array not correct length");
+        for (uint256 i = 0; i < marketsCounter; i++) {
+            availableMarketsRewards[i].underlyingDecimals = _underDecs[i];
+        }
+    }
+
+    /**
      * @dev set underlying price in common currency for a market (scaled by 1e18)
      * @param _idxMarket market index
      * @param _price underlying price (scaled by 1e18)
@@ -440,16 +461,6 @@ contract Markets is OwnableUpgradeable, MarketsStorage, IMarkets {
         distributeSingleMarketsFundsInternal(_idxMarket, _amount);
 
         return (availableMarketsRewards[_idxMarket].trancheARewardsAmount, availableMarketsRewards[_idxMarket].trancheBRewardsAmount);
-    }
-
-    function getRewardsAPYSingleMarketTrancheA(uint256 _idxMarket) external view returns(uint256 rewardsAPY) {
-        rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrAAPY;
-        return rewardsAPY;
-    }
-
-    function getRewardsAPYSingleMarketTrancheB(uint256 _idxMarket) external view returns(uint256 rewardsAPY) {
-        rewardsAPY = availableMarketsRewards[_idxMarket].rewardsTrBAPY;
-        return rewardsAPY;
     }
 
     /**

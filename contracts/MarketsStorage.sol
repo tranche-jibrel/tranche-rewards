@@ -31,8 +31,6 @@ contract MarketsStorage is OwnableUpgradeable {
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;
         uint256 rewardsFrequency;  // in days
-        uint256 rewardsTrAAPY; // scaled by 1e18
-        uint256 rewardsTrBAPY; // scaled by 1e18
     }
 
     uint256 public marketsCounter;
