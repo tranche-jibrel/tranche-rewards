@@ -58,7 +58,7 @@ contract MarketHelper is OwnableUpgradeable, IMarketHelper {
         require(_underlyingDecs <= 18, "MarketHelper: too many decimals");
         uint256 decsDiff = uint256(18).sub(_underlyingDecs);
         if (decsDiff > 0)
-            trancheBTVL = (IProtocol(_protocol).getTrAValue(_protTrNum)).mul(_underlyingPrice).mul(10**decsDiff).div(1e18);
+            trancheBTVL = (IProtocol(_protocol).getTrBValue(_protTrNum)).mul(_underlyingPrice).mul(10**decsDiff).div(1e18);
         else
             trancheBTVL = (IProtocol(_protocol).getTrBValue(_protTrNum)).mul(_underlyingPrice).div(1e18);
         return trancheBTVL;

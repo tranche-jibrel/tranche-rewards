@@ -138,13 +138,13 @@ module.exports = async (deployer, network, accounts) => {
       from: tokenOwner
     });
 
-    genesisDate = Date.now() / 1000 | 0
-    console.log(genesisDate)
+    // genesisDate = Date.now() / 1000 | 0
+    // console.log(genesisDate)
 
-    let block = await web3.eth.getBlockNumber();
-    console.log("Actual Block: " + block);
-    genesisDate = (await web3.eth.getBlock(block)).timestamp
-    console.log(genesisDate)
+    // let block = await web3.eth.getBlockNumber();
+    // console.log("Actual Block: " + block);
+    // genesisDate = (await web3.eth.getBlock(block)).timestamp
+    // console.log(genesisDate)
 
     const myIncentivesControllerInstance =
       await deployProxy(IncentivesController, [myRewardTokeninstance.address, myMktHelperinstance.address, myPriceHelperInst.address], {
