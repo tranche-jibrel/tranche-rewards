@@ -181,7 +181,7 @@ module.exports = async (deployer, network, accounts) => {
       web3.utils.toWei('1'), // 100% tranche percentage
       web3.utils.toWei('0.03'), // 3% external protocol return
       300, // 5 minute 
-      6,
+      18,
       web3.utils.toWei("1"), // underlying price
       MARKET_1_CHAIN_ADDRESS,
       false,
@@ -203,6 +203,6 @@ module.exports = async (deployer, network, accounts) => {
     await SIRInstance.refreshSliceSpeeds();
     console.log('approve slice amount');
     let sliceInstance = await RewardToken.at(SLICE_ADDRESS);
-    await sliceInstance.approve(SIRInstance.address, "" + (10 ** 18) * 30000)
+    await sliceInstance.approve(SIRInstance.address, web3.utils.toWei('3000'));
   }
 }
