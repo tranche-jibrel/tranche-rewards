@@ -1,5 +1,9 @@
 # tranche-rewards
 
+<img src="https://gblobscdn.gitbook.com/spaces%2F-MP969WsfbfQJJFgxp2K%2Favatar-1617981494187.png?alt=media" alt="Tranche Logo" width="100">
+
+Tranche Rewards is a decentralized set of contracts to distribute rewards and to have a solvency incentive ratio for protocols about Tranche Finance.
+
 Rewards can be distributed in 4 different ways:
 
 1. Dividend Mode: sending an amount of reward tokens directly to tranche token (calculations has to be performed offchain)
@@ -10,13 +14,15 @@ Rewards can be distributed in 4 different ways:
 
 4. Unstaken Mode: via IncentiveController contract, all tranche token holders can be rewarded with a rate per second and based on the tranche token amount on the total tranche token supply.
 
-All modes can be used or not, depending on the way you would like to distribute rewards.
+All modes can be used, depending on the way you would like to distribute rewards or incentives.
 
-Underlying prices for markets can be directly set by the owner, or read from chainlink price feeds. 
+Underlying prices for markets can be manually set, or read from chainlink price feeds. 
+
+Other info can be found here: https://docs.tranche.finance/tranchefinance/slice-token/slice-incentive-ratio-sir
 
 ## What is the model contracts work when distributing rewards based on markets TVLs
 
-This Model can be present in all mode or not, can be set in a contract or move to the backend. Please refer to Model.sol for a pure implementation of this model, or Markets.sol for Staking Mode, or MarketHelper.sol for IncentivesController and RewardsDistribution mode. 
+This Model can be present in all mode or not, can be set in a contract or move to the backend. Please refer to Model.sol inside Mocks folder for a pure implementation of this model, or Markets.sol for Staking Mode (described above), or MarketHelper.sol for IncentivesController and RewardsDistribution mode. 
 
 Data: 
 
@@ -57,7 +63,23 @@ All in one formula:
 
     (((extProtRet-(totalTVL*(1+extProtRet)-trATVL*(1+trARet)-trBTVL)/trBTVL)/extProtRet)+balFactor)*dailySliceAmount
 
-## Tests
+[(Back to top)](#tranche-rewards)
+
+## Development
+
+### Install Dependencies
+
+```bash
+npm i
+```
+
+### Compile project
+
+```bash
+truffle compile --all
+```
+
+### Run test
 
 Ways to test contracts:
 
@@ -83,67 +105,85 @@ Tests on Incentive Rewards Factory is around 95% at the moment
 
 Tests on Incentive Controller contract is around 99% at the moment
 
-## Contracts Size (main contracts, no interfaces, no test contracts)
-Limit is 24 KiB for single contract
+[(Back to top)](#tranche-rewards)
+
+## Main contracts - Name, Size and Description
+
 <table>
     <thead>
       <tr>
-        <th>Contract</th>
-        <th>Size</th>
+        <th>Name</th>
+        <th>Size (KiB)</th>
+        <th>Description</th>
       </tr>
     </thead>
     <tbody>
         <tr>
             <td>IncentiveRewards</td>
-            <td><code>4.18 KiB</code></td>
+            <td><code>4.18</code></td>
+            <td>Contract for Single Tranche Token rewards using Staking Mode (implementation), distributing rewards on staken Tranche tokens</td>
         </tr>
         <tr>
             <td>IncentiveRewardsStorage</td>
-            <td><code>1.04 KiB</code></td>
+            <td><code>1.04</code></td>
+            <td>Contract for Single Tranche Token rewards (storage)</td>
         </tr>
         <tr>
             <td>IncentiveRewardsFactory</td>
-            <td><code>9.50 KiB</code></td>
+            <td><code>9.50</code></td>
+            <td>Factory contract to deploy Single Tranche Token rewards contracts using Staking Mode (implementation), distributing rewards on staken Tranche tokens</td>
         </tr>
         <tr>
             <td>IncentiveRewardsFactoryStorage</td>
-            <td><code>1.11 KiB</code></td>
+            <td><code>1.11</code></td>
+            <td>Factory contract to deploy Single Tranche Token rewards contract (storage)</td>
         </tr>
         <tr>
             <td>IncentivesController</td>
-            <td><code>17.19 KiB</code></td>
+            <td><code>17.19</code></td>
+            <td>Contract for incentive rewards distribution using Unstaken Mode (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>1.75 KiB</code></td>
+            <td><code>1.75</code></td>
+            <td>Contract for incentive rewards distribution (storage)</td>
         </tr>
         <tr>
             <td>Markets</td>
-            <td><code>13.29 KiB</code></td>
+            <td><code>13.29</code></td>
+            <td>Contract for modelling markets using Staking Mode (implementation)</td>
         </tr>
         <tr>
             <td>MarketsStorage</td>
-            <td><code>1.37 KiB</code></td>
+            <td><code>1.37</code></td>
+            <td>Contract for modelling markets using Staking Mode (storage)</td>
         </tr>
         <tr>
             <td>MarketsHelper</td>
-            <td><code>4.16 KiB</code></td>
+            <td><code>4.16</code></td>
+            <td>Contract for modelling markets using Unstaken Mode</td>
         </tr>
         <tr>
             <td>PriceHelper</td>
-            <td><code>3.73 KiB</code></td>
+            <td><code>3.73</code></td>
+            <td>Contract to interact with Chainlink price feeds (implementation)</td>
         </tr>
         <tr>
             <td>PriceHelperStorage</td>
-            <td><code>0.95 KiB</code></td>
+            <td><code>0.95</code></td>
+            <td>Contract to interact with Chainlink price feeds (storage)</td>
         </tr>
         <tr>
             <td>RewardsDistribution</td>
-            <td><code>13.72 KiB</code></td>
+            <td><code>13.72</code></td>
+            <td>Contract to distribute rewards using Dividend Mode (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>
             <td>RewardsDistributionStorage</td>
-            <td><code>1.36 KiB</code></td>
+            <td><code>1.36</code></td>
+            <td>Contract to distribute rewards using Dividend Mode (storage)</td>
         </tr>
     </tbody>
   </table>
+
+[(Back to top)](#tranche-rewards)
