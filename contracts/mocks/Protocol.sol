@@ -32,6 +32,19 @@ contract Protocol is IProtocol, Initializable {
     uint256 public trCounter;
     uint256 public override totalBlocksPerYear;
 
+    struct StakingDetails {
+        uint256 startTime;
+        uint256 amount;
+        uint256 trancheNum;
+    }
+
+    // user => trancheNum => counter
+    mapping (address => mapping(uint256 => uint256)) public stakeCounterTrA;
+    mapping (address => mapping(uint256 => uint256)) public stakeCounterTrB;
+    // user => stakeCounter => struct
+    mapping (address => mapping (uint256 => StakingDetails)) public stakingDetailsTrancheA;
+    mapping (address => mapping (uint256 => StakingDetails)) public stakingDetailsTrancheB;
+
     function initialize() public initializer() {
         totalBlocksPerYear = 2102400; // same number like in Compound protocol
     }
@@ -76,6 +89,44 @@ contract Protocol is IProtocol, Initializable {
     }
     function setTotalValue(uint256 _trancheNum) external {
         tranchesMocks[_trancheNum].totalTrValue = tranchesMocks[_trancheNum].trAValue + tranchesMocks[_trancheNum].trBValue;
+    }
+
+    function setTrAStakingDetails(address _user, uint256 _trancheNum, uint256 _unixTime, uint256 _amount, uint256 _counter) public override {
+        stakeCounterTrA[_user][_trancheNum] = _counter;
+        StakingDetails storage details = stakingDetailsTrancheA[_user][_counter];
+        details.startTime = _unixTime;
+        details.amount = _amount;
+        details.trancheNum = _trancheNum;
+    }
+
+    function setTrBStakingDetails(address _user, uint256 _trancheNum, uint256 _unixTime, uint256 _amount, uint256 _counter) public override {
+        stakeCounterTrB[_user][_trancheNum] = _counter;
+        StakingDetails storage details = stakingDetailsTrancheB[_user][_counter];
+        details.startTime = _unixTime;
+        details.amount = _amount;
+        details.trancheNum = _trancheNum;
+    }
+
+    function getSingleTrancheUserStakeCounterTrA(address _user, uint256 _trancheNum) external view override returns (uint256) {
+        return stakeCounterTrA[_user][_trancheNum];
+    }
+
+    function getSingleTrancheUserStakeCounterTrB(address _user, uint256 _trancheNum) external view override returns (uint256) {
+        return stakeCounterTrB[_user][_trancheNum];
+    }
+
+    function getSingleTrancheUserSingleStakeDetailsTrA(address _user, uint256 _trancheNum, uint256 _num) external view override returns (uint256, uint256) {
+        if(stakingDetailsTrancheA[_user][_num].trancheNum == _trancheNum) {
+            return (stakingDetailsTrancheA[_user][_num].startTime, stakingDetailsTrancheA[_user][_num].amount);
+        }
+        return (0, 0);
+    }
+
+    function getSingleTrancheUserSingleStakeDetailsTrB(address _user, uint256 _trancheNum, uint256 _num) external view override returns (uint256, uint256) {
+        if(stakingDetailsTrancheB[_user][_num].trancheNum == _trancheNum) {
+            return (stakingDetailsTrancheB[_user][_num].startTime, stakingDetailsTrancheB[_user][_num].amount);
+        }
+        return (0, 0);
     }
 
     function getTrAValue(uint256 _trancheNum) external view override returns (uint256){

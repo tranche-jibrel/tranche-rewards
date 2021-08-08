@@ -17,4 +17,10 @@ interface IProtocol {
     function trancheAddresses(uint256 _trNum) external view returns (address, address, address, address);
     function getTrancheACurrentRPB(uint256 _trancheNum) external view returns (uint256);
     function totalBlocksPerYear() external view returns (uint256);
+    function setTrAStakingDetails(address _user, uint256 _trancheNum, uint256 _unixTime, uint256 _amount, uint256 _counter) external;
+    function setTrBStakingDetails(address _user, uint256 _trancheNum, uint256 _unixTime, uint256 _amount, uint256 _counter) external;
+    function getSingleTrancheUserStakeCounterTrA(address _user, uint256 _trancheNum) external view returns (uint256);
+    function getSingleTrancheUserStakeCounterTrB(address _user, uint256 _trancheNum) external view returns (uint256);
+    function getSingleTrancheUserSingleStakeDetailsTrA(address _user, uint256 _trancheNum, uint256 _num) external view returns (uint256, uint256);
+    function getSingleTrancheUserSingleStakeDetailsTrB(address _user, uint256 _trancheNum, uint256 _num) external view returns (uint256, uint256);
 }

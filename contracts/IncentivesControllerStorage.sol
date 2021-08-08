@@ -38,9 +38,10 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     }
 
     uint256 public marketsCounter;
-    // uint256 public stakingRewardsGenesis;
+    uint256 public trADistributionCounter;
+    uint256 public trBDistributionCounter;
     
-    address public rewardFactoryAddress;
+    // address public rewardFactoryAddress;
     address public rewardsTokenAddress;
     address public mktHelperAddress;
     address public priceHelperAddress;
@@ -51,10 +52,12 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     // market -> current rewards info
     mapping(uint256 => RewardsInfo) public trancheARewardsInfo;
     mapping(uint256 => RewardsInfo) public trancheBRewardsInfo;
-    // market => user => rewards per tranche token
-    mapping(uint256 => mapping(address => uint256)) public userRewardPerTokenTrAPaid;
-    mapping(uint256 => mapping(address => uint256)) public userRewardPerTokenTrBPaid;
+    // market => counter => user => rewards per tranche token
+    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public userRewardPerTokenTrAPaid;
+    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public userRewardPerTokenTrBPaid;
     // market => user => tranche rewards amount
     mapping(uint256 => mapping(address => uint256)) public trARewards;
     mapping(uint256 => mapping(address => uint256)) public trBRewards;
+
+    // market => counter => reward rate 
 }

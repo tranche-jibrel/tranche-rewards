@@ -41,7 +41,7 @@ module.exports = async (deployer, network, accounts) => {
             203662741 (2%)
             101831370 (1%)
     */
-    const MY_TRANCHE_A_RPB = new BN("305494111");
+    const MY_TRANCHE_A_RPB = new BN("407325481");
     const MY_TRANCHE_A_PRICE = new BN("21409027297510851")
     const MY_TRANCHE_A_RPB2 = new BN("203662741");
     const MY_TRANCHE_A_PRICE2 = new BN("23569787412556962")

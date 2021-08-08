@@ -264,7 +264,7 @@ contract('Incentive Controller', function (accounts) {
             paramTr = await incentiveControllerContract.availableMarketsRewards(0);
             console.log("trATVL: " + web3.utils.fromWei(trATVL, "ether") + ", trBTVL: " +
                 web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether") +
-                ", MarketShare: " + web3.utils.fromWei(paramTr[0].toString()) * 100 + " %");
+                ", MarketShare: " + web3.utils.fromWei(paramTr[2].toString()) * 100 + " %");
 
             trATVL = await marketHelperContract.getTrancheAMarketTVL(res3[0], res3[3], res4[0], MKT2_DECS);
             trBTVL = await marketHelperContract.getTrancheBMarketTVL(res3[0], res3[3], res4[0], MKT2_DECS);
@@ -272,7 +272,7 @@ contract('Incentive Controller', function (accounts) {
             paramTr = await incentiveControllerContract.availableMarketsRewards(1);
             console.log("trATVL: " + web3.utils.fromWei(trATVL, "ether") + ", trBTVL: " +
                 web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether") +
-                ", MarketShare: " + web3.utils.fromWei(paramTr[0].toString()) * 100 + " %");
+                ", MarketShare: " + web3.utils.fromWei(paramTr[2].toString()) * 100 + " %");
 
             res = await incentiveControllerContract.getMarketRewardsPercentage();
             console.log(approxeq(Number(web3.utils.fromWei(res.toString()), 1))); // true
