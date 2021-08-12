@@ -17,6 +17,7 @@ contract Protocol is IProtocol, Initializable {
         uint256 totalTrValue;
         uint256 trancheACurrentRPB;
         uint256 storedTrancheAPrice;
+        uint256 storedTrancheBPrice;
     }
 
     struct TrancheAddresses {
@@ -35,15 +36,14 @@ contract Protocol is IProtocol, Initializable {
     struct StakingDetails {
         uint256 startTime;
         uint256 amount;
-        uint256 trancheNum;
     }
 
     // user => trancheNum => counter
     mapping (address => mapping(uint256 => uint256)) public stakeCounterTrA;
     mapping (address => mapping(uint256 => uint256)) public stakeCounterTrB;
     // user => stakeCounter => struct
-    mapping (address => mapping (uint256 => StakingDetails)) public stakingDetailsTrancheA;
-    mapping (address => mapping (uint256 => StakingDetails)) public stakingDetailsTrancheB;
+    mapping (address => mapping (uint256 => mapping (uint256 => StakingDetails))) public stakingDetailsTrancheA;
+    mapping (address => mapping (uint256 => mapping (uint256 => StakingDetails))) public stakingDetailsTrancheB;
 
     function initialize() public initializer() {
         totalBlocksPerYear = 2102400; // same number like in Compound protocol
@@ -54,7 +54,8 @@ contract Protocol is IProtocol, Initializable {
             uint256 _trAVal,
             uint256 _trBVal,
             uint256 _trARBP,
-            uint256 _trAPrice) external {
+            uint256 _trAPrice,
+            uint256 _trBPrice) external {
         trancheAddresses[trCounter].ATrancheAddress = _trA;
         trancheAddresses[trCounter].BTrancheAddress = _trB;
         tranchesMocks[trCounter].trAValue = _trAVal;
@@ -62,6 +63,7 @@ contract Protocol is IProtocol, Initializable {
         tranchesMocks[trCounter].totalTrValue = _trAVal + _trBVal;
         tranchesMocks[trCounter].trancheACurrentRPB = _trARBP;
         tranchesMocks[trCounter].storedTrancheAPrice = _trAPrice;
+        tranchesMocks[trCounter].storedTrancheBPrice = _trBPrice;
         trCounter = trCounter + 1;
     }
 
@@ -93,18 +95,16 @@ contract Protocol is IProtocol, Initializable {
 
     function setTrAStakingDetails(address _user, uint256 _trancheNum, uint256 _unixTime, uint256 _amount, uint256 _counter) public override {
         stakeCounterTrA[_user][_trancheNum] = _counter;
-        StakingDetails storage details = stakingDetailsTrancheA[_user][_counter];
+        StakingDetails storage details = stakingDetailsTrancheA[_user][_trancheNum][_counter];
         details.startTime = _unixTime;
         details.amount = _amount;
-        details.trancheNum = _trancheNum;
     }
 
     function setTrBStakingDetails(address _user, uint256 _trancheNum, uint256 _unixTime, uint256 _amount, uint256 _counter) public override {
         stakeCounterTrB[_user][_trancheNum] = _counter;
-        StakingDetails storage details = stakingDetailsTrancheB[_user][_counter];
+        StakingDetails storage details = stakingDetailsTrancheB[_user][_trancheNum][_counter];
         details.startTime = _unixTime;
         details.amount = _amount;
-        details.trancheNum = _trancheNum;
     }
 
     function getSingleTrancheUserStakeCounterTrA(address _user, uint256 _trancheNum) external view override returns (uint256) {
@@ -116,17 +116,11 @@ contract Protocol is IProtocol, Initializable {
     }
 
     function getSingleTrancheUserSingleStakeDetailsTrA(address _user, uint256 _trancheNum, uint256 _num) external view override returns (uint256, uint256) {
-        if(stakingDetailsTrancheA[_user][_num].trancheNum == _trancheNum) {
-            return (stakingDetailsTrancheA[_user][_num].startTime, stakingDetailsTrancheA[_user][_num].amount);
-        }
-        return (0, 0);
+        return (stakingDetailsTrancheA[_user][_trancheNum][_num].startTime, stakingDetailsTrancheA[_user][_trancheNum][_num].amount);
     }
 
     function getSingleTrancheUserSingleStakeDetailsTrB(address _user, uint256 _trancheNum, uint256 _num) external view override returns (uint256, uint256) {
-        if(stakingDetailsTrancheB[_user][_num].trancheNum == _trancheNum) {
-            return (stakingDetailsTrancheB[_user][_num].startTime, stakingDetailsTrancheB[_user][_num].amount);
-        }
-        return (0, 0);
+        return (stakingDetailsTrancheB[_user][_trancheNum][_num].startTime, stakingDetailsTrancheB[_user][_trancheNum][_num].amount);
     }
 
     function getTrAValue(uint256 _trancheNum) external view override returns (uint256){
@@ -139,8 +133,6 @@ contract Protocol is IProtocol, Initializable {
         return tranchesMocks[_trancheNum].totalTrValue;
     }
 
-    function getTrancheBExchangeRate(uint256 _trancheNum, uint256 _newAmount) external view override returns (uint256){}
-
     function setTrancheACurrentRPB(uint256 _trancheNum, uint256 _newRPB) external {
         tranchesMocks[_trancheNum].trancheACurrentRPB = _newRPB;
     }
@@ -149,12 +141,20 @@ contract Protocol is IProtocol, Initializable {
         return tranchesMocks[_trancheNum].trancheACurrentRPB;
     }
 
-    function setTrancheAExchangeRate(uint256 _trancheNum, uint256 _trancheAPrice) public {
+    function setTrancheAExchangeRate(uint256 _trancheNum, uint256 _trancheAPrice) public override {
         tranchesMocks[_trancheNum].storedTrancheAPrice = _trancheAPrice;
     }
 
     function getTrancheAExchangeRate(uint256 _trancheNum) public view override returns (uint256) {
         return tranchesMocks[_trancheNum].storedTrancheAPrice;
+    }
+
+    function setTrancheBExchangeRate(uint256 _trancheNum, uint256 _trancheBPrice) public override {
+        tranchesMocks[_trancheNum].storedTrancheBPrice = _trancheBPrice;
+    }
+
+    function getTrancheBExchangeRate(uint256 _trancheNum) public view override returns (uint256) {
+        return tranchesMocks[_trancheNum].storedTrancheBPrice;
     }
 
 }

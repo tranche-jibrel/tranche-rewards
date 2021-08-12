@@ -92,7 +92,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log('myMktHelperinstance Deployed: ', myMktHelperinstance.address);
 
     await myProtocolinstance.createTranche(myTrAFDTinstance.address, myTrBFDTinstance.address,
-      0, 0, MY_TRANCHE_A_RPB, MY_TRANCHE_A_PRICE, {
+      0, 0, MY_TRANCHE_A_RPB, MY_TRANCHE_A_PRICE, 1, {
       from: tokenOwner
     });
     count = await myProtocolinstance.trCounter();
@@ -111,7 +111,7 @@ module.exports = async (deployer, network, accounts) => {
     console.log('myTrBFDT2 Deployed: ', myTrBFDTinst2.address);
 
     await myProtocolinstance.createTranche(myTrAFDTinst2.address, myTrBFDTinst2.address,
-      0, 0, MY_TRANCHE_A_RPB2, MY_TRANCHE_A_PRICE2, {
+      0, 0, MY_TRANCHE_A_RPB2, MY_TRANCHE_A_PRICE2, 1, {
       from: tokenOwner
     });
     count = await myProtocolinstance.trCounter();

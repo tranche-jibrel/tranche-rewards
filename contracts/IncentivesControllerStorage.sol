@@ -27,7 +27,8 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
         uint256 marketRewardsPercentage;  // scaled by 1e18
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;
-        uint256 rewardsDuration;  // in days
+        uint256 trADistributionCounter;
+        uint256 trBDistributionCounter;
     }
 
     struct RewardsInfo {
@@ -35,11 +36,13 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
         uint256 rewardRate;
         uint256 lastUpdateTime;
         uint256 rewardPerTokenStored;
+        uint256 rewardsDuration; 
+        uint256 finalTotalSupply;
     }
 
     uint256 public marketsCounter;
-    uint256 public trADistributionCounter;
-    uint256 public trBDistributionCounter;
+    // uint256 public trADistributionCounter;
+    // uint256 public trBDistributionCounter;
     
     // address public rewardFactoryAddress;
     address public rewardsTokenAddress;
@@ -49,15 +52,17 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     mapping(uint256 => Market) public availableMarkets;
     mapping(uint256 => MarketRewards) public availableMarketsRewards;
 
-    // market -> current rewards info
-    mapping(uint256 => RewardsInfo) public trancheARewardsInfo;
-    mapping(uint256 => RewardsInfo) public trancheBRewardsInfo;
-    // market => counter => user => rewards per tranche token
+    // market => counter => current rewards info
+    mapping(uint256 => mapping(uint256 => RewardsInfo)) public trancheARewardsInfo;
+    mapping(uint256 => mapping(uint256 => RewardsInfo)) public trancheBRewardsInfo;
+    // market => counter => user => rewards paid per tranche token
     mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public userRewardPerTokenTrAPaid;
     mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public userRewardPerTokenTrBPaid;
     // market => user => tranche rewards amount
     mapping(uint256 => mapping(address => uint256)) public trARewards;
     mapping(uint256 => mapping(address => uint256)) public trBRewards;
+    // market => counter => user => paid
+    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public historicalRewardsTrAPaid;
+    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public historicalRewardsTrBPaid;
 
-    // market => counter => reward rate 
 }

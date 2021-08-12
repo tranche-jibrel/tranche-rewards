@@ -24,6 +24,7 @@ contract RewardsDistributionStorage is OwnableUpgradeable {
 
     struct MarketRewards {
         uint256 underlyingPrice;  // scaled by 1e18
+        uint256 underlyingDecimals; 
         uint256 marketRewardsPercentage;  // scaled by 1e18
         uint256 trancheARewardsAmount;
         uint256 trancheBRewardsAmount;
@@ -32,13 +33,15 @@ contract RewardsDistributionStorage is OwnableUpgradeable {
         uint256 rewardsTrBAPY; // scaled by 1e18
     }
 
+    uint256 public marketsCounter;
+
+    address public rewardToken;
+    address public mktHelperAddress;
+    address public priceHelperAddress;
+
     mapping(uint256 => Market) public availableMarkets;
     mapping(uint256 => MarketRewards) public availableMarketsRewards;
     // market -> current rewards balance
     mapping(uint256 => uint256) public fundsATokenBalance;
-    mapping(uint256 => uint256) public fundsBTokenBalance;
-
-    uint256 public marketsCounter;
-
-    address public rewardToken;
+    mapping(uint256 => uint256) public fundsBTokenBalance; 
 }
