@@ -143,13 +143,13 @@ contract('Incentive Controller', function (accounts) {
             expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("1")
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user1))
             expect(bal).to.be.equal("10000")
-            await incentiveControllerContract.trancheANewEnter(user1, ether("10000"), trAFDTContract0.address)
+            // await incentiveControllerContract.trancheANewEnter(user1, ether("10000"), trAFDTContract0.address)
 
             await trBFDTContract0.mint(user1, ether("500"));
             await protocolContract.setTrBStakingDetails(user1, 0, now, ether("500"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user1))
             expect(bal).to.be.equal("500")
-            await incentiveControllerContract.trancheBNewEnter(user1, ether("500"), trBFDTContract0.address)
+            // await incentiveControllerContract.trancheBNewEnter(user1, ether("500"), trBFDTContract0.address)
 
             totASupply = await trAFDTContract0.totalSupply();
             // console.log(web3.utils.fromWei(totASupply))
@@ -277,13 +277,13 @@ contract('Incentive Controller', function (accounts) {
             await protocolContract.setTrAStakingDetails(user2, 0, now, ether("20000"), 1)
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user2))
             expect(bal).to.be.equal("20000")
-            await incentiveControllerContract.trancheANewEnter(user2, ether("20000"), trAFDTContract0.address)
+            // await incentiveControllerContract.trancheANewEnter(user2, ether("20000"), trAFDTContract0.address)
             
             await trBFDTContract0.mint(user2, ether("500"));
             await protocolContract.setTrBStakingDetails(user2, 0, now, ether("500"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user2))
             expect(bal).to.be.equal("500")
-            await incentiveControllerContract.trancheBNewEnter(user2, ether("500"), trBFDTContract0.address)
+            // await incentiveControllerContract.trancheBNewEnter(user2, ether("500"), trBFDTContract0.address)
 
             totASupply = await trAFDTContract0.totalSupply();
             // console.log(web3.utils.fromWei(totASupply))
@@ -327,13 +327,13 @@ contract('Incentive Controller', function (accounts) {
             await protocolContract.setTrAStakingDetails(user3, 0, now, ether("10000"), 1)
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user3))
             expect(bal).to.be.equal("10000")
-            await incentiveControllerContract.trancheANewEnter(user3, ether("10000"), trAFDTContract0.address)
+            // await incentiveControllerContract.trancheANewEnter(user3, ether("10000"), trAFDTContract0.address)
 
             await trBFDTContract0.mint(user3, ether("1000"));
             await protocolContract.setTrBStakingDetails(user3, 0, now, ether("1000"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user3))
             expect(bal).to.be.equal("1000")
-            await incentiveControllerContract.trancheBNewEnter(user3, ether("1000"), trBFDTContract0.address)
+            // await incentiveControllerContract.trancheBNewEnter(user3, ether("1000"), trBFDTContract0.address)
 
             totASupply = await trAFDTContract0.totalSupply();
             // console.log(web3.utils.fromWei(totASupply))
@@ -354,7 +354,6 @@ contract('Incentive Controller', function (accounts) {
             console.log("mkt0 A rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
             mkt0trARRate = res[1]
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
-            // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
 
             console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
@@ -366,7 +365,7 @@ contract('Incentive Controller', function (accounts) {
     describe('Getting rewards after some time', function () {
 
         it('time passes...', async function () {
-            const maturity = Number(time.duration.seconds(300));
+            const maturity = Number(time.duration.seconds(300)); // duration: 3600 summation: 900 --> 1/4 duration
             let block = await web3.eth.getBlockNumber();
             console.log((await web3.eth.getBlock(block)).timestamp)
 
@@ -387,8 +386,8 @@ contract('Incentive Controller', function (accounts) {
             console.log("User2 Rewards mkt0 TrA: " + web3.utils.fromWei(balanceA2.toString()))
             console.log("User3 Rewards mkt0 TrA: " + web3.utils.fromWei(balanceA3.toString()))
             bal0trA = new BN(balanceA1.toString()).add(new BN(balanceA2.toString())).add(new BN(balanceA3.toString()));
-            console.log(bal0trA.toString() + " around " + mkt0trARewards.divn(4).toString())
-            // expect(web3.utils.fromWei(bal0trA.toString())).to.be.equal((web3.utils.fromWei((mkt0trARewards.divn(10).toString()))))
+            console.log(web3.utils.fromWei(bal0trA.toString()) + " around " + web3.utils.fromWei(mkt0trARewards.divn(4).toString()))
+            // expect(approxeq(web3.utils.fromWei(bal0trA.toString()), web3.utils.fromWei((mkt0trARewards.divn(4)).toString()))).to.be.true
 
             balanceB1 = await incentiveControllerContract.trBEarned(0, user1, distCount)
             balanceB2 = await incentiveControllerContract.trBEarned(0, user2, distCount)
@@ -397,9 +396,8 @@ contract('Incentive Controller', function (accounts) {
             console.log("User2 Rewards mkt0 TrB: " + web3.utils.fromWei(balanceB2.toString()))
             console.log("User3 Rewards mkt0 TrB: " + web3.utils.fromWei(balanceB3.toString()))
             bal0trB = new BN(balanceB1.toString()).add(new BN(balanceB2.toString())).add(new BN(balanceB3.toString()));
-            console.log(bal0trB.toString() + " around " + mkt0trBRewards.divn(4).toString())
-            // expect(approxeq(web3.utils.fromWei(bal0trB.toString()), web3.utils.fromWei(mkt0trBRewards.divn(10).toString()))).to.be.true
-            // expect(web3.utils.fromWei(bal0trB.toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(10).toString())))
+            console.log(web3.utils.fromWei(bal0trB.toString()) + " around " + web3.utils.fromWei((mkt0trBRewards.divn(4)).toString()))
+            // expect(approxeq(web3.utils.fromWei(bal0trB.toString()), web3.utils.fromWei((mkt0trBRewards.divn(4)).toString()))).to.be.true
 
             res = await incentiveControllerContract.trancheARewardsInfo(0, distCount)
             console.log("mkt0 A: periodFinish: " + res[0] + ", rewardRate: " + res[1] + ", rewardPerTokenStored: " + res[3]);
@@ -497,11 +495,9 @@ contract('Incentive Controller', function (accounts) {
                 web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether"));
 
             res = await incentiveControllerContract.trancheARewardsInfo(0, distCount)
-            // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trARewards.divn(1000).toString())))
             console.log("mkt0 A rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
             mkt0trARRate = res[1]
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
-            // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
 
             console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
@@ -527,7 +523,7 @@ contract('Incentive Controller', function (accounts) {
 
         it('Read values', async function () {
             res = await incentiveControllerContract.availableMarketsRewards(0)
-            console.log("mkt0: A rewards: " + res[3] + ", B rewards: " + res[4] + ", rewards dur.: " + res[5]);
+            console.log("mkt0: A rewards: " + res[3] + ", B rewards: " + res[4]);
             mkt0trARewards = new BN(res[3].toString())
             mkt0trBRewards = new BN(res[4].toString())
 
@@ -538,8 +534,6 @@ contract('Incentive Controller', function (accounts) {
             console.log("User2 Rewards mkt0 TrA: " + web3.utils.fromWei(balanceA2.toString()))
             console.log("User3 Rewards mkt0 TrA: " + web3.utils.fromWei(balanceA3.toString()))
             bal0trA = new BN(balanceA1.toString()).add(new BN(balanceA2.toString())).add(new BN(balanceA3.toString()));
-            console.log(bal0trA.toString() + " around " + mkt0trARewards.toString())
-            // expect(web3.utils.fromWei(bal0trA.toString())).to.be.equal((web3.utils.fromWei((mkt0trARewards.divn(10).toString()))))
 
             balanceB1 = await incentiveControllerContract.trBEarned(0, user1, distCount)
             balanceB2 = await incentiveControllerContract.trBEarned(0, user2, distCount)
@@ -548,12 +542,11 @@ contract('Incentive Controller', function (accounts) {
             console.log("User2 Rewards mkt0 TrB: " + web3.utils.fromWei(balanceB2.toString()))
             console.log("User3 Rewards mkt0 TrB: " + web3.utils.fromWei(balanceB3.toString()))
             bal0trB = new BN(balanceB1.toString()).add(new BN(balanceB2.toString())).add(new BN(balanceB3.toString()));
-            console.log(bal0trB.toString() + " around " + mkt0trBRewards.toString())
-            // expect(approxeq(web3.utils.fromWei(bal0trB.toString()), web3.utils.fromWei(mkt0trBRewards.divn(10).toString()))).to.be.true
-            // expect(web3.utils.fromWei(bal0trB.toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(10).toString())))
 
             bal = await rewardTokenContract.balanceOf(incentiveControllerContract.address)
             console.log(web3.utils.fromWei(bal.toString()))
+            totBal = balanceA1.add(balanceA2).add(balanceA3).add(balanceB1).add(balanceB2).add(balanceB3)
+            expect(approxeq(web3.utils.fromWei(totBal.toString()), web3.utils.fromWei(bal.toString()))).to.be.true
         });
 
     });
@@ -623,7 +616,7 @@ contract('Incentive Controller', function (accounts) {
             console.log("distr counter: " + distCount.toString())
 
             res = await incentiveControllerContract.getTokenBalance(rewardTokenContract.address)
-            // expect(web3.utils.fromWei(res.toString())).to.be.equal("25")
+            console.log("Contract rewards balance: " + web3.utils.fromWei(res.toString()))
             res = await incentiveControllerContract.availableMarketsRewards(0)
             console.log("mkt0: A rewards: " + web3.utils.fromWei(res[3]) + ", B rewards: " + web3.utils.fromWei(res[4]) + ", rewards dur.: " + res[5]);
             mkt0trARewards = new BN(res[3].toString())
@@ -640,10 +633,13 @@ contract('Incentive Controller', function (accounts) {
             mkt0trBRRate = res[1]
             console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
             console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
+
+            bal = await rewardTokenContract.balanceOf(incentiveControllerContract.address)
+            console.log("Incentive rew bal: " + web3.utils.fromWei(bal.toString()))
         });
 
         it('time passes...', async function () {
-            const maturity = Number(time.duration.seconds(1000));
+            const maturity = Number(time.duration.seconds(1500));
             let block = await web3.eth.getBlockNumber();
 
             await timeMachine.advanceTimeAndBlock(maturity);
@@ -653,64 +649,75 @@ contract('Incentive Controller', function (accounts) {
 
         it('Check Historical Rewards for users', async function () { 
             bal = await rewardTokenContract.balanceOf(user1)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log("User1 rew bal: " + web3.utils.fromWei(bal.toString()))
             tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrA(0, user1, 1)
-            console.log(tokenBal.toString())
+            console.log("User1 previous distrib rew bal TrA: " + web3.utils.fromWei(tokenBal.toString()))
             oldRewards = await incentiveControllerContract.trAEarned(0, user1, 1)
-            console.log(oldRewards.toString())
-            await incentiveControllerContract.claimHistoricalRewardSingleMarketTrA(0, user1)
-            bal = await rewardTokenContract.balanceOf(user1)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log("User1 previous distrib rew earned TrA: " + web3.utils.fromWei(oldRewards.toString()))
+            await incentiveControllerContract.claimHistoricalRewardSingleMarketTrA(0, user1, {from: user1})
+
+            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrB(0, user1, 1)
+            console.log("User1 previous distrib rew bal TrB: " + web3.utils.fromWei(tokenBal.toString()))
+            oldRewards = await incentiveControllerContract.trBEarned(0, user1, 1)
+            console.log("User1 previous distrib rew earned TrB: " + web3.utils.fromWei(oldRewards.toString()))
+            await incentiveControllerContract.claimHistoricalRewardSingleMarketTrB(0, user1, {from: user1})
+            balU1 = await rewardTokenContract.balanceOf(user1)
+            console.log("User1 previous distrib rew claimed and new rew bal: " + web3.utils.fromWei(bal.toString()))
 
             bal = await rewardTokenContract.balanceOf(user2)
-            console.log(web3.utils.fromWei(bal.toString()))
-            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrA(0, user1, 1)
-            console.log(tokenBal.toString())
+            console.log("User2 rew bal: " + web3.utils.fromWei(bal.toString()))
+            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrA(0, user2, 1)
+            console.log("User2 previous distrib rew bal TrA: " + web3.utils.fromWei(tokenBal.toString()))
             oldRewards = await incentiveControllerContract.trAEarned(0, user2, 1)
-            console.log(oldRewards.toString())
-            await incentiveControllerContract.claimHistoricalRewardSingleMarketTrA(0, user2)
-            bal = await rewardTokenContract.balanceOf(user2)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log("User2 previous distrib rew earned TrA: " + web3.utils.fromWei(oldRewards.toString()))
+            ret = await incentiveControllerContract.claimHistoricalRewardSingleMarketTrA(0, user2, {from: user2})
+
+            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrB(0, user2, 1)
+            console.log("User2 previous distrib rew bal TrB: " + web3.utils.fromWei(tokenBal.toString()))
+            oldRewards = await incentiveControllerContract.trBEarned(0, user2, 1)
+            console.log("User2 previous distrib rew earned TrB: " + web3.utils.fromWei(oldRewards.toString()))
+            ret = await incentiveControllerContract.claimHistoricalRewardSingleMarketTrB(0, user2, {from: user2})
+            balU2 = await rewardTokenContract.balanceOf(user2)
+            console.log("User2 previous distrib rew claimed and new rew bal: " + web3.utils.fromWei(bal.toString()))
 
             bal = await rewardTokenContract.balanceOf(user3)
-            console.log(web3.utils.fromWei(bal.toString()))
-            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrA(0, user1, 1)
-            console.log(tokenBal.toString())
+            console.log("User3 rew bal: " + web3.utils.fromWei(bal.toString()))
+            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrA(0, user3, 1)
+            console.log("User3 previous distrib rew bal TrA: " + web3.utils.fromWei(tokenBal.toString()))
             oldRewards = await incentiveControllerContract.trAEarned(0, user3, 1)
-            console.log(oldRewards.toString())
-            await incentiveControllerContract.claimHistoricalRewardSingleMarketTrA(0, user3)
-            bal = await rewardTokenContract.balanceOf(user3)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log("User3 previous distrib rew earned TrA: " + web3.utils.fromWei(oldRewards.toString()))
+            ret = await incentiveControllerContract.claimHistoricalRewardSingleMarketTrA(0, user3, {from: user3})
+            
+            tokenBal = await incentiveControllerContract.calcHistoricalAmountRewardsTrB(0, user3, 1)
+            console.log("User3 previous distrib rew bal TrA: " + web3.utils.fromWei(tokenBal.toString()))
+            oldRewards = await incentiveControllerContract.trBEarned(0, user3, 1)
+            console.log("User3 previous distrib rew earned TrA: " + web3.utils.fromWei(oldRewards.toString()))
+            ret = await incentiveControllerContract.claimHistoricalRewardSingleMarketTrB(0, user3, {from: user3})
+            balU3 = await rewardTokenContract.balanceOf(user3)
+            console.log("User3 previous distrib rew claimed and new rew bal: " + web3.utils.fromWei(bal.toString()))
+
+            totBal = balU1.add(balU2).add(balU3)
+            console.log("Total rewards Distr. 1: " + web3.utils.fromWei(totBal.toString()));
         });
 
         it('Rewards earned for anyone', async function () {
-            console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, distCount, user1)).toString())
+            console.log("Dist Count: " + distCount)
+
+            bal = await rewardTokenContract.balanceOf(incentiveControllerContract.address)
+            console.log("Incentive rew bal: " + web3.utils.fromWei(bal.toString()))
             balA1 = await incentiveControllerContract.trAEarned(0, user1, distCount)
-            console.log(web3.utils.fromWei(bal.toString()))
-            console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, distCount, user2)).toString())
+            console.log(web3.utils.fromWei(balA1.toString()))
             balA2 = await incentiveControllerContract.trAEarned(0, user2, distCount)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log(web3.utils.fromWei(balA2.toString()))
             balA2 = await incentiveControllerContract.trAEarned(0, user3, distCount)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log(web3.utils.fromWei(balA3.toString()))
 
-            // totBalA = balA1.add(balA2).add(balA2)
-            // console.log(web3.utils.fromWei(totBalA.toString()))
-
-            console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, distCount, user1)).toString())
             balB1 = await incentiveControllerContract.trBEarned(0, user1, distCount)
-            console.log(web3.utils.fromWei(bal.toString()))
-            console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, distCount, user2)).toString())
+            console.log(web3.utils.fromWei(balB1.toString()))
             balB2 = await incentiveControllerContract.trBEarned(0, user2, distCount)
-            console.log(web3.utils.fromWei(bal.toString()))
+            console.log(web3.utils.fromWei(balB2.toString()))
             balB3 = await incentiveControllerContract.trBEarned(0, user3, distCount)
-            console.log(web3.utils.fromWei(bal.toString()))
-
-            // totBalB = balB1.add(balB2).add(balB3)
-            // console.log(web3.utils.fromWei(totBalB.toString()))
-
-            // totBal = totBalA.add(totBalB)
-            // bal = await rewardTokenContract.balanceOf(user3)
-            // console.log(web3.utils.fromWei(bal.toString()) + " is around " + web3.utils.fromWei(bal.toString()))
+            console.log(web3.utils.fromWei(balB3.toString()))
 
         });
 

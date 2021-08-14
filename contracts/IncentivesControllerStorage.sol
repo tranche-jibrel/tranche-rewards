@@ -41,10 +41,7 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     }
 
     uint256 public marketsCounter;
-    // uint256 public trADistributionCounter;
-    // uint256 public trBDistributionCounter;
-    
-    // address public rewardFactoryAddress;
+
     address public rewardsTokenAddress;
     address public mktHelperAddress;
     address public priceHelperAddress;

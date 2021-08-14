@@ -16,7 +16,9 @@ Rewards can be distributed in 4 different ways:
 
 All modes can be used, depending on the way you would like to distribute rewards or incentives.
 
-Underlying prices for markets can be manually set, or read from chainlink price feeds. 
+Modes from 1 to 3 are inside OldProjects folder, while mode 4 is present inside contracts folder.
+
+if needed, underlying prices for markets can be manually set, or read from chainlink price feeds. 
 
 Other info can be found here: https://docs.tranche.finance/tranchefinance/slice-token/slice-incentive-ratio-sir
 
@@ -97,7 +99,7 @@ Solidity Coverage (no ganache required):
 
 ### Test Coverage
 
-Every distribution mode requires different contract(s) to be deployed, that's why you can find 3 different files in migration and in test folders. The easiest way to test all contracts is to deploy 1 mode only per session and launch the related test file(s)
+Every distribution mode requires different contract(s) to be deployed, that's why you can find 3 different files in migration and in test folders. The easiest way to test all contracts is to deploy 1 mode only per session and launch the related test file(s). Please refer to project you are interested into to have the correct migration and test files 
     
 Tests on Rewards Distribution is around 91% at the moment
 
@@ -119,49 +121,19 @@ Tests on Incentive Controller contract is around 99% at the moment
     </thead>
     <tbody>
         <tr>
-            <td>IncentiveRewards</td>
-            <td><code>4.18</code></td>
-            <td>Contract for Single Tranche Token rewards using Staking Mode (implementation), distributing rewards on staken Tranche tokens</td>
-        </tr>
-        <tr>
-            <td>IncentiveRewardsStorage</td>
-            <td><code>1.04</code></td>
-            <td>Contract for Single Tranche Token rewards (storage)</td>
-        </tr>
-        <tr>
-            <td>IncentiveRewardsFactory</td>
-            <td><code>9.50</code></td>
-            <td>Factory contract to deploy Single Tranche Token rewards contracts using Staking Mode (implementation), distributing rewards on staken Tranche tokens</td>
-        </tr>
-        <tr>
-            <td>IncentiveRewardsFactoryStorage</td>
-            <td><code>1.11</code></td>
-            <td>Factory contract to deploy Single Tranche Token rewards contract (storage)</td>
-        </tr>
-        <tr>
             <td>IncentivesController</td>
-            <td><code>17.19</code></td>
-            <td>Contract for incentive rewards distribution using Unstaken Mode (implementation), distributing rewards on Tranche tokens holders</td>
+            <td><code>21.26</code></td>
+            <td>Contract for incentive rewards (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>1.75</code></td>
+            <td><code>2.055</code></td>
             <td>Contract for incentive rewards distribution (storage)</td>
         </tr>
         <tr>
-            <td>Markets</td>
-            <td><code>13.29</code></td>
-            <td>Contract for modelling markets using Staking Mode (implementation)</td>
-        </tr>
-        <tr>
-            <td>MarketsStorage</td>
-            <td><code>1.37</code></td>
-            <td>Contract for modelling markets using Staking Mode (storage)</td>
-        </tr>
-        <tr>
             <td>MarketsHelper</td>
-            <td><code>4.16</code></td>
-            <td>Contract for modelling markets using Unstaken Mode</td>
+            <td><code>4.20</code></td>
+            <td>Contract for modelling markets</td>
         </tr>
         <tr>
             <td>PriceHelper</td>
@@ -172,16 +144,6 @@ Tests on Incentive Controller contract is around 99% at the moment
             <td>PriceHelperStorage</td>
             <td><code>0.95</code></td>
             <td>Contract to interact with Chainlink price feeds (storage)</td>
-        </tr>
-        <tr>
-            <td>RewardsDistribution</td>
-            <td><code>13.72</code></td>
-            <td>Contract to distribute rewards using Dividend Mode (implementation), distributing rewards on Tranche tokens holders</td>
-        </tr>
-        <tr>
-            <td>RewardsDistributionStorage</td>
-            <td><code>1.36</code></td>
-            <td>Contract to distribute rewards using Dividend Mode (storage)</td>
         </tr>
     </tbody>
   </table>
