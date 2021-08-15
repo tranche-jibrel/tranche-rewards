@@ -138,12 +138,14 @@ contract('Incentive Controller', function (accounts) {
             let block = await web3.eth.getBlockNumber();
             now = (await web3.eth.getBlock(block)).timestamp
 
+            await incentiveControllerContract.trancheANewEnter(user1, trAFDTContract0.address)
             await trAFDTContract0.mint(user1, ether("10000"));
             await protocolContract.setTrAStakingDetails(user1, 0, now, ether("10000"), 1)
             expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("1")
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user1))
             expect(bal).to.be.equal("10000")
 
+            await incentiveControllerContract.trancheBNewEnter(user1, trBFDTContract0.address)
             await trBFDTContract0.mint(user1, ether("500"));
             await protocolContract.setTrBStakingDetails(user1, 0, now, ether("500"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user1))
@@ -273,11 +275,13 @@ contract('Incentive Controller', function (accounts) {
             now = (await web3.eth.getBlock(block)).timestamp
             console.log((await web3.eth.getBlock(block)).timestamp)
 
+            await incentiveControllerContract.trancheANewEnter(user2, trAFDTContract0.address)
             await trAFDTContract0.mint(user2, ether("20000"));
             await protocolContract.setTrAStakingDetails(user2, 0, now, ether("20000"), 1)
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user2))
             expect(bal).to.be.equal("20000")
             
+            await incentiveControllerContract.trancheBNewEnter(user2, trBFDTContract0.address)
             await trBFDTContract0.mint(user2, ether("500"));
             await protocolContract.setTrBStakingDetails(user2, 0, now, ether("500"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user2))
@@ -321,11 +325,13 @@ contract('Incentive Controller', function (accounts) {
             now = (await web3.eth.getBlock(block)).timestamp
             console.log((await web3.eth.getBlock(block)).timestamp)
 
+            await incentiveControllerContract.trancheANewEnter(user3, trAFDTContract0.address)
             await trAFDTContract0.mint(user3, ether("10000"));
             await protocolContract.setTrAStakingDetails(user3, 0, now, ether("10000"), 1)
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user3))
             expect(bal).to.be.equal("10000")
 
+            await incentiveControllerContract.trancheBNewEnter(user3, trBFDTContract0.address)
             await trBFDTContract0.mint(user3, ether("1000"));
             await protocolContract.setTrBStakingDetails(user3, 0, now, ether("1000"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user3))
@@ -369,11 +375,13 @@ contract('Incentive Controller', function (accounts) {
             now = (await web3.eth.getBlock(block)).timestamp
             console.log((await web3.eth.getBlock(block)).timestamp)
 
+            await incentiveControllerContract.trancheANewEnter(user4, trAFDTContract0.address)
             await trAFDTContract0.mint(user4, ether("12492.1"));
             await protocolContract.setTrAStakingDetails(user4, 0, now, ether("12492.1"), 1)
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user4))
             expect(bal).to.be.equal("12492.1")
 
+            await incentiveControllerContract.trancheBNewEnter(user4, trBFDTContract0.address)
             await trBFDTContract0.mint(user4, ether("448"));
             await protocolContract.setTrBStakingDetails(user4, 0, now, ether("448"), 1)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user4))

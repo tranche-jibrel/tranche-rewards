@@ -58,8 +58,8 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     // market => user => tranche rewards amount
     mapping(uint256 => mapping(address => uint256)) public trARewards;
     mapping(uint256 => mapping(address => uint256)) public trBRewards;
-    // market => counter => user => paid
-    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public historicalRewardsTrAPaid;
-    mapping(uint256 => mapping(uint256 => mapping(address => bool))) public historicalRewardsTrBPaid;
+    // market => distrib => user => counter => paid
+    mapping(uint256 => mapping(uint256 => mapping(address => mapping(uint256 => bool)))) public historicalRewardsTrAPaid;
+    mapping(uint256 => mapping(uint256 => mapping(address => mapping(uint256 => bool)))) public historicalRewardsTrBPaid;
 
 }

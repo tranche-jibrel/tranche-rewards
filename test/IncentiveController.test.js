@@ -139,48 +139,56 @@ contract('Incentive Controller', function (accounts) {
         let block = await web3.eth.getBlockNumber();
         now = (await web3.eth.getBlock(block)).timestamp
 
+        await incentiveControllerContract.trancheANewEnter(user1, trAFDTContract0.address)
         await trAFDTContract0.mint(user1, ether("10000"));
         await protocolContract.setTrAStakingDetails(user1, 0, now, ether("10000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user1))
         expect(bal).to.be.equal("10000")
 
+        await incentiveControllerContract.trancheANewEnter(user2, trAFDTContract0.address)
         await trAFDTContract0.mint(user2, ether("20000"));
         await protocolContract.setTrAStakingDetails(user2, 0, now, ether("20000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user2, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user2))
         expect(bal).to.be.equal("20000")
 
+        await incentiveControllerContract.trancheANewEnter(user3, trAFDTContract0.address)
         await trAFDTContract0.mint(user3, ether("30000"));
         await protocolContract.setTrAStakingDetails(user3, 0, now, ether("30000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user3, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user3))
         expect(bal).to.be.equal("30000")
 
+        await incentiveControllerContract.trancheANewEnter(user4, trAFDTContract0.address)
         await trAFDTContract0.mint(user4, ether("40000"));
         await protocolContract.setTrAStakingDetails(user4, 0, now, ether("40000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user4, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user4))
         expect(bal).to.be.equal("40000")
 
+        await incentiveControllerContract.trancheBNewEnter(user1, trBFDTContract0.address)
         await trBFDTContract0.mint(user1, ether("1000"));
         await protocolContract.setTrBStakingDetails(user1, 0, now, ether("1000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user1))
         expect(bal).to.be.equal("1000")
 
+        await incentiveControllerContract.trancheBNewEnter(user2, trBFDTContract0.address)
         await trBFDTContract0.mint(user2, ether("2000"));
         await protocolContract.setTrBStakingDetails(user2, 0, now, ether("2000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user2, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user2))
         expect(bal).to.be.equal("2000")
 
+        await incentiveControllerContract.trancheBNewEnter(user3, trBFDTContract0.address)
         await trBFDTContract0.mint(user3, ether("3000"));
         await protocolContract.setTrBStakingDetails(user3, 0, now, ether("3000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user3, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user3))
         expect(bal).to.be.equal("3000")
 
+        await incentiveControllerContract.trancheBNewEnter(user4, trBFDTContract0.address)
         await trBFDTContract0.mint(user4, ether("4000"));
         await protocolContract.setTrBStakingDetails(user4, 0, now, ether("4000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user4, 0)).toString()).to.be.equal("1")
@@ -206,48 +214,56 @@ contract('Incentive Controller', function (accounts) {
         let block = await web3.eth.getBlockNumber();
         now = (await web3.eth.getBlock(block)).timestamp
 
+        await incentiveControllerContract.trancheANewEnter(user1, trAFDTContract1.address)
         await trAFDTContract1.mint(user1, ether("1000"));
         await protocolContract.setTrAStakingDetails(user1, 1, now, ether("1000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract1.balanceOf(user1))
         expect(bal).to.be.equal("1000")
 
+        await incentiveControllerContract.trancheANewEnter(user2, trAFDTContract1.address)
         await trAFDTContract1.mint(user2, ether("2000"));
         await protocolContract.setTrAStakingDetails(user2, 1, now, ether("2000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user2, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract1.balanceOf(user2))
         expect(bal).to.be.equal("2000")
 
+        await incentiveControllerContract.trancheANewEnter(user3, trAFDTContract1.address)
         await trAFDTContract1.mint(user3, ether("3000"));
         await protocolContract.setTrAStakingDetails(user3, 1, now, ether("3000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user3, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract1.balanceOf(user3))
         expect(bal).to.be.equal("3000")
 
+        await incentiveControllerContract.trancheANewEnter(user4, trAFDTContract1.address)
         await trAFDTContract1.mint(user4, ether("4000"));
         await protocolContract.setTrAStakingDetails(user4, 1, now, ether("4000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user4, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trAFDTContract1.balanceOf(user4))
         expect(bal).to.be.equal("4000")
 
+        await incentiveControllerContract.trancheBNewEnter(user1, trBFDTContract1.address)
         await trBFDTContract1.mint(user1, ether("1000"));
         await protocolContract.setTrBStakingDetails(user1, 1, now, ether("1000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trBFDTContract1.balanceOf(user1))
         expect(bal).to.be.equal("1000")
 
+        await incentiveControllerContract.trancheBNewEnter(user2, trBFDTContract1.address)
         await trBFDTContract1.mint(user2, ether("2000"));
         await protocolContract.setTrBStakingDetails(user2, 1, now, ether("2000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user2, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trBFDTContract1.balanceOf(user2))
         expect(bal).to.be.equal("2000")
 
+        await incentiveControllerContract.trancheBNewEnter(user3, trBFDTContract1.address)
         await trBFDTContract1.mint(user3, ether("3000"));
         await protocolContract.setTrBStakingDetails(user3, 1, now, ether("3000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user3, 0)).toString()).to.be.equal("1")
         bal = web3.utils.fromWei(await trBFDTContract1.balanceOf(user3))
         expect(bal).to.be.equal("3000")
 
+        await incentiveControllerContract.trancheBNewEnter(user4, trBFDTContract1.address)
         await trBFDTContract1.mint(user4, ether("4000"));
         await protocolContract.setTrBStakingDetails(user4, 1, now, ether("4000"), 1)
         expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user4, 0)).toString()).to.be.equal("1")
@@ -368,25 +384,7 @@ contract('Incentive Controller', function (accounts) {
             await incentiveControllerContract.updateRewardAmountsAllMarkets(web3.utils.toWei("100"), 1000, {
                 from: owner
             })
-/*
-            await incentiveControllerContract.trancheANewEnter(user1, ether("10000"), trAFDTContract0.address)
-            await incentiveControllerContract.trancheBNewEnter(user1, ether("1000"), trBFDTContract0.address)
-            await incentiveControllerContract.trancheANewEnter(user2, ether("20000"), trAFDTContract0.address)
-            await incentiveControllerContract.trancheBNewEnter(user2, ether("2000"), trBFDTContract0.address)
-            await incentiveControllerContract.trancheANewEnter(user3, ether("30000"), trAFDTContract0.address)
-            await incentiveControllerContract.trancheBNewEnter(user3, ether("3000"), trBFDTContract0.address)
-            await incentiveControllerContract.trancheANewEnter(user4, ether("40000"), trAFDTContract0.address)
-            await incentiveControllerContract.trancheBNewEnter(user4, ether("4000"), trBFDTContract0.address)
 
-            await incentiveControllerContract.trancheANewEnter(user1, ether("1000"), trAFDTContract1.address)
-            await incentiveControllerContract.trancheBNewEnter(user1, ether("1000"), trBFDTContract1.address)
-            await incentiveControllerContract.trancheANewEnter(user2, ether("2000"), trAFDTContract1.address)
-            await incentiveControllerContract.trancheBNewEnter(user2, ether("2000"), trBFDTContract1.address)
-            await incentiveControllerContract.trancheANewEnter(user3, ether("3000"), trAFDTContract1.address)
-            await incentiveControllerContract.trancheBNewEnter(user3, ether("3000"), trBFDTContract1.address)
-            await incentiveControllerContract.trancheANewEnter(user4, ether("4000"), trAFDTContract1.address)
-            await incentiveControllerContract.trancheBNewEnter(user4, ether("4000"), trBFDTContract1.address)
-*/
             res = await incentiveControllerContract.getTokenBalance(rewardTokenContract.address)
             expect(web3.utils.fromWei(res.toString())).to.be.equal("100")
 
@@ -807,6 +805,8 @@ contract('Incentive Controller', function (accounts) {
             await incentiveControllerContract.setUnderlyingDecimalsAllMarkets([6, 18], {from: owner})
             await incentiveControllerContract.setUnderlyingDecimalsSingleMarket(0, 18, {from: owner})
             await incentiveControllerContract.emergencyTokenTransfer(rewardTokenContract.address, user1, 0, {from: owner})
+            await incentiveControllerContract.setUnderlyingPriceFromChainlinkSingleMarket(0, {from: owner})
+            await incentiveControllerContract.setUnderlyingPriceFromChainlinkAllMarkets({from: owner})
         });
     });
 });

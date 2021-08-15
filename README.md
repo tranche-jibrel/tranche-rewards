@@ -122,12 +122,12 @@ Tests on Incentive Controller contract is around 99% at the moment
     <tbody>
         <tr>
             <td>IncentivesController</td>
-            <td><code>21.26</code></td>
+            <td><code>22.90</code></td>
             <td>Contract for incentive rewards (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>2.055</code></td>
+            <td><code>2.13</code></td>
             <td>Contract for incentive rewards distribution (storage)</td>
         </tr>
         <tr>
