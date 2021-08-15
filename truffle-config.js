@@ -16,9 +16,23 @@ module.exports = {
           `https://kovan.infura.io/v3/${process.env.INFURA_KEY}`
         ),
       network_id: 42,
+      gas: 6721975,
+      gasPrice: 161000000000,
+      confirmations: 2,
+      timeoutBlocks: 2000,
+      skipDryRun: true
+    },
+    mainnet: {
+      provider: () =>
+        new HDWalletProvider(
+          process.env.mnemonic,
+          `https://mainnet.infura.io/v3/${process.env.INFURA_KEY}`
+        ),
+      network_id: 1,
       gas: 5500000,
-      // confirmations: 2,
+      gasPrice: 161000000000,
       timeoutBlocks: 200,
+      confirmations: 2,
       skipDryRun: true
     },
   },

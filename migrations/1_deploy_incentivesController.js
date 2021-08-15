@@ -204,5 +204,55 @@ module.exports = async (deployer, network, accounts) => {
     console.log('approve slice amount');
     let sliceInstance = await RewardToken.at(SLICE_ADDRESS);
     await sliceInstance.approve(SIRInstance.address, web3.utils.toWei('3000'));
+  } else if (network == "mainnet") {
+    const { SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS } = process.env;
+    console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS)
+    const tokenOwner = accounts[0];
+    const marketHelper = await deployProxy(MarketHelper, [], {
+      from: tokenOwner
+    });
+    console.log('MARKET_HELPER_ADDRESS=' + marketHelper.address);
+
+    const priceHelper = await deployProxy(PriceHelper, [], {
+      from: tokenOwner
+    });
+    console.log('PRICE_HELPER_ADDRESS=' + priceHelper.address);
+
+    const SIRInstance = await deployProxy(IncentivesController, [SLICE_ADDRESS, marketHelper.address, priceHelper.address], {
+      from: tokenOwner
+    });
+    console.log('SIR_ADDRESS=' + SIRInstance.address);
+    await priceHelper.setControllerAddress(SIRInstance.address, { from: tokenOwner })
+    console.log('control in adding first tranche')
+    await SIRInstance.addTrancheMarket(
+      PROTOCOL_ADDRESS,
+      0, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.03'), // 3% external protocol return
+      604800, // 1 week
+      18,
+      0, // underlying price
+      MARKET_1_CHAIN_ADDRESS,
+      false,
+      { from: tokenOwner });
+    console.log('control in adding second tranche')
+    await SIRInstance.addTrancheMarket(
+      PROTOCOL_ADDRESS,
+      1, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.03'), // 3% external protocol return
+      604800, // 1 week 
+      6,
+      0, // underlying price
+      MARKET_2_CHAIN_ADDRESS,
+      false,
+      { from: tokenOwner });
+    console.log('refresh slice speed')
+    await SIRInstance.refreshSliceSpeeds();
+    // console.log('approve slice amount');
+    // let sliceInstance = await RewardToken.at(SLICE_ADDRESS);
+    // await sliceInstance.approve(SIRInstance.address, web3.utils.toWei('3000'));
   }
 }
