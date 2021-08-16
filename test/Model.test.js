@@ -20,16 +20,21 @@ contract('Model', function (accounts) {
   /*
   Compound price: 21409027297510851 (trAPrice)
 
+  // calc percentage
+  // trAAPY = trARPB * 2102400 / trAPrice
+  // trARPB = trAAPY * trAPrice / 2102400
+
   TrARPB: 305494111 (3%)
           407325481 (4%)
           509156852 (5%)
           203662741 (2%)
           101831370 (1%)
-  */
-  const MY_TRANCHE_A_RPB = new BN("305494111");
-  const MY_EXT_PROT_RET = new BN("30000000000000000");
+  */                               
+  const MY_TRANCHE_A_RPB = new BN("541286150");
+  const MY_EXT_PROT_RET = new BN("125300000000000000");
   const MY_BAL_FACTOR = new BN("500000000000000000");
-  const MY_TRANCHE_A_PRICE = new BN("21409027297510851");
+  const MY_TRANCHE_A_PRICE = new BN("28450000000000000");
+                                     
 
   // before each `it`, even in `describe`
 /*  beforeEach(async function () {
@@ -52,11 +57,11 @@ contract('Model', function (accounts) {
 
   describe('settings', function () {
     it('get tranches values', async function () {
-      await this.model.setTranchesMarketTVL(ether('10000'), ether('3000'));
+      await this.model.setTranchesMarketTVL(ether('3941.4'), ether('1493.4'));
       trATVL = await this.model.trancheAMarketTVL();
       trBTVL = (await this.model.totalTrancheMarketTVL()).sub(trATVL);
-      expect(trATVL).to.be.bignumber.equal(ether('3000'));
-      expect(trBTVL.toString()).to.be.bignumber.equal(ether('7000'));
+      // expect(trATVL).to.be.bignumber.equal(ether('3000'));
+      // expect(trBTVL.toString()).to.be.bignumber.equal(ether('7000'));
       console.log("trATVL: "+ web3.utils.fromWei(trATVL, "ether") + ", trBTVL: " + web3.utils.fromWei(trBTVL, "ether"));
     });
 
