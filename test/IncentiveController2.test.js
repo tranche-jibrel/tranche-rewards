@@ -168,7 +168,7 @@ contract('Incentive Controller', function (accounts) {
                 web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether"));
 
             tx = await incentiveControllerContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_MARKET_PERCENTAGE,
-                MY_EXT_PROT_RET0, 1000, MKT1_DECS, 1000000, chainlink1Contract.address, false, {
+                MY_EXT_PROT_RET0, /*1000,*/ MKT1_DECS, 1000000, chainlink1Contract.address, false, {
                     from: owner
                 });
 

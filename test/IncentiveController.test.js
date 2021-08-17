@@ -290,12 +290,12 @@ contract('Incentive Controller', function (accounts) {
 
         it('set tranche in rewards distribution contract', async function () {
             tx = await incentiveControllerContract.addTrancheMarket(protocolContract.address, 0, MY_BAL_FACTOR, MY_MARKET_PERCENTAGE,
-                MY_EXT_PROT_RET, 1000, MKT1_DECS, 1000000, chainlink1Contract.address, false, {
+                MY_EXT_PROT_RET, /*1000,*/ MKT1_DECS, 1000000, chainlink1Contract.address, false, {
                     from: owner
                 });
 
             tx = await incentiveControllerContract.addTrancheMarket(protocolContract.address, 1, MY_BAL_FACTOR, MY_MARKET_PERCENTAGE,
-                MY_EXT_PROT_RET, 1000, MKT2_DECS, web3.utils.toWei('1'), chainlink2Contract.address, false, {
+                MY_EXT_PROT_RET, /*1000,*/ MKT2_DECS, web3.utils.toWei('1'), chainlink2Contract.address, false, {
                     from: owner
                 });
 
@@ -389,14 +389,12 @@ contract('Incentive Controller', function (accounts) {
             expect(web3.utils.fromWei(res.toString())).to.be.equal("100")
 
             res = await incentiveControllerContract.availableMarketsRewards(0)
-            console.log("mkt0: A rewards: " + res[3] + ", B rewards: " + res[4]);
+            console.log("mkt0: A rewards: " + res[3] + ", B rewards: " + res[4] + ", distr counter: " + res[5].toString());
             mkt0trARewards = new BN(res[3].toString())
             mkt0trBRewards = new BN(res[4].toString())
             totRewards = new BN(res[3].toString()).add(new BN(res[4].toString()));
 
-            res = await incentiveControllerContract.availableMarketsRewards(0);
             distCount = res[5];
-            console.log("distr counter: " + distCount.toString())
 
             res = await incentiveControllerContract.trancheARewardsInfo(0, distCount)
             expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trARewards.divn(1000).toString())))
@@ -412,14 +410,12 @@ contract('Incentive Controller', function (accounts) {
             // expect(Number(res[1])).to.be.equal(mkt0trBRewards / 1000)
 
             res = await incentiveControllerContract.availableMarketsRewards(1)
-            console.log("mkt1: A rewards: " + res[3] + ", B rewards: " + res[4]);
+            console.log("mkt1: A rewards: " + res[3] + ", B rewards: " + res[4] + ", distr counter: " + res[5].toString());
             mkt1trARewards = new BN(res[3].toString())
             mkt1trBRewards = new BN(res[4].toString())
             totRewards = totRewards.add(new BN(res[3].toString())).add(new BN(res[4].toString()));
 
-            res = await incentiveControllerContract.availableMarketsRewards(1);
             distCount = res[5];
-            console.log("distr counter: " + distCount.toString())
             
             res = await incentiveControllerContract.trancheARewardsInfo(1, distCount)
             expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt1trARewards.divn(1000).toString())))
