@@ -465,7 +465,7 @@ contract('Incentive Controller', function (accounts) {
         });
 
         it('user2 and user4 claim all their rewards', async function () {
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user2, {
                 from: user2
             })
             // await incentiveControllerContract.claimRewardSingleMarketTrA(0, {from: user2})
@@ -486,7 +486,7 @@ contract('Incentive Controller', function (accounts) {
             console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, distCount, user2)).toString())
             console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, distCount, user2)).toString())
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user4, {
                 from: user4
             })
             bal = await rewardTokenContract.balanceOf(user4)
@@ -524,7 +524,7 @@ contract('Incentive Controller', function (accounts) {
             now = (await web3.eth.getBlock(block)).timestamp
             console.log((await web3.eth.getBlock(block)).timestamp)
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user3, {
                 from: user3
             })
 
@@ -570,18 +570,6 @@ contract('Incentive Controller', function (accounts) {
 
             console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
             console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
-
-            // await incentiveControllerContract.claimRewardsAllMarkets({
-            //     from: user3
-            // })
-
-            // bal = await rewardTokenContract.balanceOf(user3)
-            // console.log("User3 rewards: " + web3.utils.fromWei(bal.toString()))
-            // expect((await incentiveControllerContract.trAEarned(0, user3)).toString()).to.be.equal("0")
-            // expect((await incentiveControllerContract.trBEarned(0, user3)).toString()).to.be.equal("0")
-
-            // console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, user3)).toString())
-            // console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, user3)).toString())
         });
 
     });
@@ -636,7 +624,7 @@ contract('Incentive Controller', function (accounts) {
         });
 
         it('all users claim all their rewards', async function () {
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user1, {
                 from: user1
             })
             bal1 = await rewardTokenContract.balanceOf(user1)
@@ -647,7 +635,7 @@ contract('Incentive Controller', function (accounts) {
             console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, distCount, user1)).toString())
             console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, distCount, user1)).toString())
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user2, {
                 from: user2
             })
             bal2 = await rewardTokenContract.balanceOf(user2)
@@ -657,7 +645,7 @@ contract('Incentive Controller', function (accounts) {
             console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, distCount, user2)).toString())
             console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, distCount, user2)).toString())
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user3, {
                 from: user3
             })
             bal3 = await rewardTokenContract.balanceOf(user3)
@@ -667,7 +655,7 @@ contract('Incentive Controller', function (accounts) {
             console.log((await incentiveControllerContract.userRewardPerTokenTrAPaid(0, distCount, user3)).toString())
             console.log((await incentiveControllerContract.userRewardPerTokenTrBPaid(0, distCount, user3)).toString())
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user4, {
                 from: user4
             })
             bal4 = await rewardTokenContract.balanceOf(user4)
@@ -716,25 +704,25 @@ contract('Incentive Controller', function (accounts) {
         });
 
         it('Claiming rewards after duration elapsed', async function () {
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user1, {
                 from: user1
             })
             bal1 = await rewardTokenContract.balanceOf(user1)
             console.log("User1 rewards: " + web3.utils.fromWei(bal1.toString()))
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user2, {
                 from: user2
             })
             bal2 = await rewardTokenContract.balanceOf(user2)
             console.log("User2 rewards: " + web3.utils.fromWei(bal2.toString()))
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user3, {
                 from: user3
             })
             bal3 = await rewardTokenContract.balanceOf(user3)
             console.log("User3 rewards: " + web3.utils.fromWei(bal3.toString()))
 
-            await incentiveControllerContract.claimRewardsAllMarkets({
+            await incentiveControllerContract.claimRewardsAllMarkets(user4, {
                 from: user4
             })
             bal4 = await rewardTokenContract.balanceOf(user4)

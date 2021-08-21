@@ -10,7 +10,7 @@ interface IIncentivesController {
     function trancheANewEnter(address account, address trancheA) external;
     function trancheBNewEnter(address account, address trancheA) external;
 
-    function claimRewardsAllMarkets() external;
-    function claimRewardSingleMarketTrA(uint256 _idxMarket, uint256 _distCount) external;
-    function claimRewardSingleMarketTrB(uint256 _idxMarket, uint256 _distCount) external;
+    function claimRewardsAllMarkets(address _account) external;
+    function claimRewardSingleMarketTrA(uint256 _idxMarket, uint256 _distCount, address _account) external;
+    function claimRewardSingleMarketTrB(uint256 _idxMarket, uint256 _distCount, address _account) external;
 }

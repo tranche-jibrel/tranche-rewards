@@ -16,9 +16,13 @@ Rewards can be distributed in 4 different ways:
 
 All modes can be used, depending on the way you would like to distribute rewards or incentives.
 
-Modes from 1 to 3 are inside OldProjects folder, while mode 4 is present inside contracts folder.
+Mode 1 is ready using tranche tokens directly.
 
-if needed, underlying prices for markets can be manually set, or read from chainlink price feeds. 
+Modes 2 and 3 are inside OldProjects folder.
+
+Mode 4 is present inside contracts folder.
+
+If needed, underlying prices for markets can be manually set, or read from chainlink price feeds.
 
 Other info can be found here: https://docs.tranche.finance/tranchefinance/slice-token/slice-incentive-ratio-sir
 
@@ -100,12 +104,12 @@ Solidity Coverage (no ganache required):
 ### Test Coverage
 
 Every distribution mode requires different contract(s) to be deployed, that's why you can find 3 different files in migration and in test folders. The easiest way to test all contracts is to deploy 1 mode only per session and launch the related test file(s). Please refer to project you are interested into to have the correct migration and test files 
-    
-Tests on Rewards Distribution is around 91% at the moment
 
-Tests on Incentive Rewards Factory is around 95% at the moment
+Tests on Incentive Controller contract is around 99%.
 
-Tests on Incentive Controller contract is around 99% at the moment
+Tests on Market Helper contract is around 98%.
+
+Tests on Price Helper contract is around 96%.
 
 [(Back to top)](#tranche-rewards)
 
@@ -122,7 +126,7 @@ Tests on Incentive Controller contract is around 99% at the moment
     <tbody>
         <tr>
             <td>IncentivesController</td>
-            <td><code>22.16</code></td>
+            <td><code>22.07</code></td>
             <td>Contract for incentive rewards (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>

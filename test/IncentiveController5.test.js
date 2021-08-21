@@ -285,7 +285,7 @@ contract('Incentive Controller', function (accounts) {
             web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether"));
     });
 
-    describe('settings', function () {
+    describe('settings, with manual settings of market percentages', function () {
         let res1, res2, res3, res4;
 
         it('set tranche in rewards distribution contract', async function () {
@@ -317,7 +317,8 @@ contract('Incentive Controller', function (accounts) {
             res4 = await incentiveControllerContract.availableMarketsRewards(1)
             console.log("Total TVL in Market1: " + (web3.utils.fromWei(await marketHelperContract.getTrancheMarketTVL(res3[0], res3[3], res4[0], MKT2_DECS)).toString()))
 
-            await incentiveControllerContract.refreshSliceSpeeds();
+            // await incentiveControllerContract.refreshSliceSpeeds();
+            await incentiveControllerContract.setRewardsPercentageAllMarkets([web3.utils.toWei("0.5"), web3.utils.toWei("0.4")])
 
             mkt0Share = web3.utils.fromWei(await incentiveControllerContract.getMarketSharePerTranche(0))
             mkt1Share = web3.utils.fromWei(await incentiveControllerContract.getMarketSharePerTranche(1))
@@ -342,8 +343,7 @@ contract('Incentive Controller', function (accounts) {
                 ", MarketShare: " + web3.utils.fromWei(paramTr[2].toString()) * 100 + " %");
 
             res = await incentiveControllerContract.getMarketRewardsPercentage();
-            console.log(approxeq(Number(web3.utils.fromWei(res.toString()), 1))); // true
-            expect(approxeq(Number(web3.utils.fromWei(res.toString())), 1)).to.be.true
+            expect(approxeq(Number(web3.utils.fromWei(res.toString())), 0.9)).to.be.true
         });
 
         it('read values and distribute rewards to tranches', async function () {
@@ -382,10 +382,11 @@ contract('Incentive Controller', function (accounts) {
                 from: owner
             })
 
-            percent = (await incentiveControllerContract.getMarketRewardsPercentage()).addn(1);
-            maxAmount = web3.utils.toWei("100")
-            calcAmount = BigInt(maxAmount * percent / Math.pow(10, 18)).toString()
-            bnCalcAmount = new BN(calcAmount)
+            percent = (await incentiveControllerContract.getMarketRewardsPercentage());
+            console.log(web3.utils.fromWei(percent.toString()))
+            maxAmount = new BN("100")
+            calcAmount = maxAmount * new BN(percent.toString())
+            console.log(web3.utils.fromWei(calcAmount.toString()))
 
             await incentiveControllerContract.updateRewardAmountsAllMarkets(web3.utils.toWei("100"), 1000, {
                 from: owner
@@ -437,8 +438,8 @@ contract('Incentive Controller', function (accounts) {
             // expect(Number(web3.utils.fromWei(totRewards.toString()))).to.be.lte(calcAmount)
             // expect(Number(web3.utils.fromWei(totRewards.toString()))).to.be.gt(calcAmount)
             console.log(Number(web3.utils.fromWei(totRewards.toString())))
-            console.log(Number(web3.utils.fromWei(bnCalcAmount.toString())))
-            expect(approxeq(Number(totRewards), Number(bnCalcAmount))).to.be.true
+            console.log(Number(web3.utils.fromWei(calcAmount.toString())))
+            expect(approxeq(Number(totRewards), Number(calcAmount))).to.be.true
             // expect(web3.utils.fromWei(totRewards.toString())).to.be.equal("1000")
         });
     });
@@ -505,7 +506,7 @@ contract('Incentive Controller', function (accounts) {
             bal1trB = new BN(balanceB1.toString()).add(new BN(balanceB2.toString())).add(new BN(balanceB3.toString())).add(new BN(balanceB4.toString()));
             console.log(bal1trB.toString() + " around " + mkt1trBRewards.divn(10).toString())
             totBal = bal0trA.add(bal0trB).add(bal1trA).add(bal1trB)
-            console.log(web3.utils.fromWei(totBal.toString()) + " around 10")
+            console.log(web3.utils.fromWei(totBal.toString()) + " around 9")
             // expect(web3.utils.fromWei(totBal.toString())).to.be.equal("100")
         });
 
@@ -661,10 +662,10 @@ contract('Incentive Controller', function (accounts) {
             bal1trB = new BN(balanceB1.toString()).add(new BN(balanceB2.toString())).add(new BN(balanceB3.toString())).add(new BN(balanceB4.toString()));
             console.log(bal1trB.toString() + " around " + mkt1trBRewards.toString())
             totBal = bal0trA.add(bal0trB).add(bal1trA).add(bal1trB)
-            console.log(web3.utils.fromWei(totBal.toString()) + " around 200")
+            console.log(web3.utils.fromWei(totBal.toString()) + " around 180")
 
-            expect(Number(web3.utils.fromWei(totBal.toString()))).to.be.lte(194)
-            expect(Number(web3.utils.fromWei(totBal.toString()))).to.be.gt(193)
+            expect(Number(web3.utils.fromWei(totBal.toString()))).to.be.lte(175)
+            expect(Number(web3.utils.fromWei(totBal.toString()))).to.be.gt(174)
             // expect(web3.utils.fromWei(totBal.toString())).to.be.equal("100")
         });
 
@@ -709,14 +710,14 @@ contract('Incentive Controller', function (accounts) {
             expect((await incentiveControllerContract.trAEarned(1, user4, distCount)).toString()).to.be.equal("0")
             expect((await incentiveControllerContract.trBEarned(1, user4, distCount)).toString()).to.be.equal("0")
 
-            expect(approxeq(Number(web3.utils.fromWei(bal1.toString())), 20)).to.be.true
-            expect(approxeq(Number(web3.utils.fromWei(bal2.toString())), 40)).to.be.true
-            expect(approxeq(Number(web3.utils.fromWei(bal3.toString())), 60)).to.be.true
-            expect(approxeq(Number(web3.utils.fromWei(bal4.toString())), 80)).to.be.true
+            expect(approxeq(Number(web3.utils.fromWei(bal1.toString())), 18)).to.be.true
+            expect(approxeq(Number(web3.utils.fromWei(bal2.toString())), 36)).to.be.true
+            expect(approxeq(Number(web3.utils.fromWei(bal3.toString())), 54)).to.be.true
+            expect(approxeq(Number(web3.utils.fromWei(bal4.toString())), 72)).to.be.true
 
             bal = await rewardTokenContract.balanceOf(incentiveControllerContract.address)
             console.log(web3.utils.fromWei(bal.toString()))
-            expect(approxeq(Number(web3.utils.fromWei(bal.toString())), 0)).to.be.true
+            expect(approxeq(Number(web3.utils.fromWei(bal.toString())), 20)).to.be.true
         });
     });
 
@@ -768,6 +769,10 @@ contract('Incentive Controller', function (accounts) {
             expect(web3.utils.fromWei(bal.toString())).to.be.equal("0")
             bal = await incentiveControllerContract.trBEarned(1, user4, distCount)
             expect(web3.utils.fromWei(bal.toString())).to.be.equal("0")
+
+            bal = await rewardTokenContract.balanceOf(incentiveControllerContract.address)
+            console.log("Rewards reamining in contract: " + web3.utils.fromWei(bal.toString()))
+            expect(approxeq(Number(web3.utils.fromWei(bal.toString())), 20)).to.be.true
         });
     });
 
