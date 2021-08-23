@@ -4,7 +4,7 @@
  * @summary: Protocol Interface
  * @author: Jibrel Team
  */
-pragma solidity 0.8.0;
+pragma solidity 0.8.7;
 
 interface IProtocol {
     function getTrA(uint256 _trancheNum) external view returns (address);

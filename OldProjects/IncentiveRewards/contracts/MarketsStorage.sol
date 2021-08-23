@@ -4,7 +4,7 @@
  * @summary: Slice Rewards Storage
  * @author: Jibrel Team
  */
-pragma solidity 0.8.0;
+pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 

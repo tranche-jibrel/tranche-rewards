@@ -126,27 +126,27 @@ Tests on Price Helper contract is around 96%.
     <tbody>
         <tr>
             <td>IncentivesController</td>
-            <td><code>22.07</code></td>
+            <td><code>20.71</code></td>
             <td>Contract for incentive rewards (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>
             <td>IncentivesControllerStorage</td>
-            <td><code>2.13</code></td>
+            <td><code>1.67</code></td>
             <td>Contract for incentive rewards distribution (storage)</td>
         </tr>
         <tr>
             <td>MarketsHelper</td>
-            <td><code>4.20</code></td>
+            <td><code>3.96</code></td>
             <td>Contract for modelling markets</td>
         </tr>
         <tr>
             <td>PriceHelper</td>
-            <td><code>3.73</code></td>
+            <td><code>3.37</code></td>
             <td>Contract to interact with Chainlink price feeds (implementation)</td>
         </tr>
         <tr>
             <td>PriceHelperStorage</td>
-            <td><code>0.95</code></td>
+            <td><code>0.83</code></td>
             <td>Contract to interact with Chainlink price feeds (storage)</td>
         </tr>
     </tbody>

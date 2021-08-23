@@ -4,7 +4,7 @@
  * @summary: Markets Interface
  * @author: Jibrel Team
  */
-pragma solidity 0.8.0;
+pragma solidity 0.8.7;
 
 interface IIncentivesController {
     function trancheANewEnter(address account, address trancheA) external;

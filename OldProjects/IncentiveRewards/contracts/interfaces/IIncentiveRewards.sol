@@ -4,7 +4,7 @@
  * @summary: Incentive Rewards Interface
  * @author: Jibrel Team
  */
-pragma solidity 0.8.0;
+pragma solidity 0.8.7;
 
 interface IIncentiveRewards {
     // Views

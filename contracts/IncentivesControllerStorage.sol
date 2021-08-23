@@ -4,7 +4,7 @@
  * @summary: Incentives Controller Storage contract
  * @author: Jibrel Team
  */
-pragma solidity 0.8.0;
+pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -55,11 +55,8 @@ contract IncentivesControllerStorage is OwnableUpgradeable {
     // market => counter => user => rewards paid per tranche token
     mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public userRewardPerTokenTrAPaid;
     mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public userRewardPerTokenTrBPaid;
-    // market => user => tranche rewards amount
-    mapping(uint256 => mapping(address => uint256)) public trARewards;
-    mapping(uint256 => mapping(address => uint256)) public trBRewards;
-    // market => distrib => user => counter => paid
-    mapping(uint256 => mapping(uint256 => mapping(address => mapping(uint256 => bool)))) public historicalRewardsTrAPaid;
-    mapping(uint256 => mapping(uint256 => mapping(address => mapping(uint256 => bool)))) public historicalRewardsTrBPaid;
+    // market => distrib => user => tranche rewards amount
+    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public trARewards;
+    mapping(uint256 => mapping(uint256 => mapping(address => uint256))) public trBRewards;
 
 }

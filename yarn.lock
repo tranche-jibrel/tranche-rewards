@@ -603,15 +603,15 @@
     "find-up" "^4.1.0"
     "fs-extra" "^8.1.0"
 
-"@openzeppelin/contracts-upgradeable@4.0.0":
-  "integrity" "sha512-T5tO/KD++m+Ph74ppPPmNuhyrvNcsMDgQWt+pGshNJMsTf9UvmhBNyyOqVAL91UeuqDI0FHAbBV1+NnMg7ffFA=="
-  "resolved" "https://registry.npmjs.org/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.0.0.tgz"
-  "version" "4.0.0"
+"@openzeppelin/contracts-upgradeable@4.3.0":
+  "integrity" "sha512-kNplrFl2rg1VP6JzneYNJZpytJmE7VmgtyR0j6GiaP9qHupzkZWgS+L45AhK2DJupBq2wQ+t9LsVzOavvWgl9Q=="
+  "resolved" "https://registry.npmjs.org/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.3.0.tgz"
+  "version" "4.3.0"
 
-"@openzeppelin/contracts@4.0.0":
-  "integrity" "sha512-UcIJl/vUVjTr3H1yYXZi7Sr2PlXzBEHVUJKOUlVyzyy0FI8oQCCy0Wx+BuK/fojdnmLeMvUk4KUvhKUybP+C7Q=="
-  "resolved" "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-4.0.0.tgz"
-  "version" "4.0.0"
+"@openzeppelin/contracts@4.3.0":
+  "integrity" "sha512-+uBDl/TrmR0Kch6mq3tuxMex/fK7huR6+fQMae+zJk1K5T+dp0pFl12Hbc+1L6oYMXoyDSBJ8zqhRIntrREDFA=="
+  "resolved" "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-4.3.0.tgz"
+  "version" "4.3.0"
 
 "@openzeppelin/test-helpers@0.5.11":
   "integrity" "sha512-HkFpCjtTD8dk+wdYhsT07YbMGCE+Z4Wp5sBKXvPDF3Lynoc0H2KqZgCWV+qr2YZ0WW1oX/sXkKFrrKJ0caBTjw=="

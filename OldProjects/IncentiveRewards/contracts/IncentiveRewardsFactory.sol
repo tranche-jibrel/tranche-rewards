@@ -4,7 +4,7 @@
  * @summary: Staking Rewards Factory contract
  * @author: Jibrel Team
  */
-pragma solidity ^0.8.0;
+pragma solidity 0.8.7;
 
 
 import "./IncentiveRewards.sol";

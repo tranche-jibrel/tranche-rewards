@@ -4,7 +4,7 @@
  * @summary: PriceHelper Interface
  * @author: Jibrel Team
  */
-pragma solidity 0.8.0;
+pragma solidity 0.8.7;
 
 interface IPriceHelper {
     function setExternalProviderParameters(uint256 _idxMarket, address _extProvAddress, bool _reciprPrice) external;
