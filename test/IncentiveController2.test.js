@@ -253,8 +253,6 @@ contract('Incentive Controller', function (accounts) {
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]) + ", rewards dur.: " + res[4]);
             mkt0trBRRate = res[1]
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
 
             expect(Number(web3.utils.fromWei(totRewards.toString()))).to.be.lte(25)
             expect(Number(web3.utils.fromWei(totRewards.toString()))).to.be.gt(24)
@@ -308,9 +306,6 @@ contract('Incentive Controller', function (accounts) {
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
-
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
         });
 
         it('user3 enters after a while in market 0', async function () {
@@ -358,9 +353,6 @@ contract('Incentive Controller', function (accounts) {
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
-
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
         });
 
         it('user4 enters after a while in market 0', async function () {
@@ -408,9 +400,6 @@ contract('Incentive Controller', function (accounts) {
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
-
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
         });
     });
 
@@ -567,9 +556,6 @@ contract('Incentive Controller', function (accounts) {
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
             console.log("mkt0 B rewardRate: " + web3.utils.fromWei(res[1]) + ", rewardPerTokenStored: " + web3.utils.fromWei(res[3]));
-
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString(), "%")
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString(), "%")
         });
 
     });

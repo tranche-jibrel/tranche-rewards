@@ -406,8 +406,7 @@ contract('Incentive Controller', function (accounts) {
             expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trARewards.divn(1000).toString())))
             console.log("mkt0 A rewardRate: " + res[1] + ", rewardPerTokenStored: " + res[3] + ", rewards dur.: " + res[4] + ", periodFinish: " + res[0]);
             mkt0trARRate = res[1]
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString())
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString())
+
             // expect(Number(res[1])).to.be.equal(mkt0trARewards / 1000)
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
             expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
@@ -561,8 +560,7 @@ contract('Incentive Controller', function (accounts) {
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trARewards.divn(1000).toString())))
             console.log("mkt0 A rewardRate: " + res[1] + ", rewardPerTokenStored: " + res[3]  + ", rewards dur.: " + res[4] + ", periodFinish: " + res[0]);
             mkt0trARRate = res[1]
-            console.log("mkt0 TrA APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheA(0)).toString())
-            console.log("mkt0 TrB APY: " + web3.utils.fromWei(await incentiveControllerContract.getRewardsAPYSingleMarketTrancheB(0)).toString())
+
             // expect(Number(res[1])).to.be.equal(mkt0trARewards / 1000)
             res = await incentiveControllerContract.trancheBRewardsInfo(0, distCount)
             // expect(web3.utils.fromWei(res[1].toString())).to.be.equal(web3.utils.fromWei((mkt0trBRewards.divn(1000).toString())))
