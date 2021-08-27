@@ -513,13 +513,13 @@ contract('Incentive Controller', function (accounts) {
 
             await incentiveControllerContract.trancheANewEnter(user3, trAFDTContract0.address)
             await trAFDTContract0.mint(user3, ether("10000"));
-            await protocolContract.setTrAStakingDetails(user3, 0, now, ether("10000"), 1)
+            await protocolContract.setTrAStakingDetails(user3, 0, now, ether("10000"), 2)
             bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user3))
             expect(bal).to.be.equal("10000")
             
             await incentiveControllerContract.trancheBNewEnter(user3, trBFDTContract0.address)
             await trBFDTContract0.mint(user3, ether("1000"));
-            await protocolContract.setTrBStakingDetails(user3, 0, now, ether("1000"), 1)
+            await protocolContract.setTrBStakingDetails(user3, 0, now, ether("1000"), 2)
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user3))
             expect(bal).to.be.equal("1000")
 
