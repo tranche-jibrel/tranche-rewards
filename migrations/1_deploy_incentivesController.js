@@ -158,14 +158,10 @@ module.exports = async (deployer, network, accounts) => {
     const { SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS } = process.env;
     console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS)
     const tokenOwner = accounts[0];
-    const marketHelper = await deployProxy(MarketHelper, [], {
-      from: tokenOwner
-    });
+    const marketHelper = await MarketHelper.at("0x1E4B8D46efEEA3803A1Ef84b163f6299d4fe41c4")
     console.log('MARKET_HELPER_ADDRESS=' + marketHelper.address);
 
-    const priceHelper = await deployProxy(PriceHelper, [], {
-      from: tokenOwner
-    });
+    const priceHelper = await PriceHelper.at("0xA1e6Fa4ebcA0A5ea473a7178F91D9599254c4993")
     console.log('PRICE_HELPER_ADDRESS=' + priceHelper.address);
 
     const SIRInstance = await deployProxy(IncentivesController, [SLICE_ADDRESS, marketHelper.address, priceHelper.address], {
