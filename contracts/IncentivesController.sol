@@ -189,8 +189,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             userBal = getHistoricalBalanceTrA(_idxMarket, _account, _idxDistrib);
         }
             
-        return userBal.mul(rewardPerTrAToken(_idxMarket, _idxDistrib).sub(userRewardPerTokenTrAPaid[_idxMarket][_idxDistrib][_account]))
-            .div(1e18).add(trARewards[_idxMarket][_idxDistrib][_account]);     
+        uint256 rewPerTokenA = rewardPerTrAToken(_idxMarket, _idxDistrib);
+        uint256 userRewPerTokenPaidA = userRewardPerTokenTrAPaid[_idxMarket][_idxDistrib][_account];
+        if (rewPerTokenA >= userRewPerTokenPaidA) {
+            return userBal.mul(rewPerTokenA.sub(userRewPerTokenPaidA)).div(1e18).add(trARewards[_idxMarket][_idxDistrib][_account]); 
+        } else {
+            return trARewards[_idxMarket][_idxDistrib][_account];
+        }    
     }
 
     /**
@@ -209,8 +214,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             userBal = getHistoricalBalanceTrB(_idxMarket, _account, _idxDistrib);
         }
 
-        return userBal.mul(rewardPerTrBToken(_idxMarket, _idxDistrib).sub(userRewardPerTokenTrBPaid[_idxMarket][_idxDistrib][_account]))
-            .div(1e18).add(trBRewards[_idxMarket][_idxDistrib][_account]);  
+        uint256 rewPerTokenB = rewardPerTrBToken(_idxMarket, _idxDistrib);
+        uint256 userRewPerTokenPaidB = userRewardPerTokenTrBPaid[_idxMarket][_idxDistrib][_account];
+        if (rewPerTokenB >= userRewPerTokenPaidB) {
+            return userBal.mul(rewPerTokenB.sub(userRewPerTokenPaidB)).div(1e18).add(trBRewards[_idxMarket][_idxDistrib][_account]);  
+        } else {
+            return trBRewards[_idxMarket][_idxDistrib][_account];
+        }     
     }
 
     /**

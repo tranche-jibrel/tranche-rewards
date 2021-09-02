@@ -132,7 +132,7 @@ contract('Incentive Controller', function (accounts) {
     });
 
     describe('settings', function () {
-        let res1, res2, res3, res4;
+        let res1, res2;
 
         it('set some user tokens and tranche in rewards distribution contract', async function () {
             let block = await web3.eth.getBlockNumber();
@@ -297,17 +297,6 @@ contract('Incentive Controller', function (accounts) {
     });
 
     describe('Distribution #2', function () {
-        // it('time passes...', async function () {
-        //     const maturity = Number(time.duration.seconds(100));
-        //     let block = await web3.eth.getBlockNumber();
-        //     console.log((await web3.eth.getBlock(block)).timestamp)
-
-        //     await timeMachine.advanceTimeAndBlock(maturity);
-
-        //     block = await web3.eth.getBlockNumber()
-        //     console.log((await web3.eth.getBlock(block)).timestamp)
-        // });
-
         it ("Adding rewards for another duration (2)", async function () {
             res1 = await incentiveControllerContract.availableMarkets(0)
             res2 = await incentiveControllerContract.availableMarketsRewards(0)
@@ -373,7 +362,6 @@ contract('Incentive Controller', function (accounts) {
             balanceB1 = await incentiveControllerContract.trBEarned(0, user1, distCount)
             console.log("User1 Rewards mkt0 TrB: " + web3.utils.fromWei(balanceB1.toString()))
         });
-        
     });
 
     describe('distribution #3', function() {
@@ -826,7 +814,6 @@ contract('Incentive Controller', function (accounts) {
             console.log("Incentive rew bal: " + web3.utils.fromWei(bal.toString()))
         });
     })
-
 
     describe('reclaiming the rewards again for anyone', function() {
         it('Claiming rewards after duration elapsed', async function () {
