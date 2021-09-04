@@ -927,13 +927,15 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @dev claim all rewards from all markets for a single user
      * @param _account claimer address
      */
-    function claimRewardsAllMarkets(address _account) external override {
-        for (uint i = 0; i < marketsCounter; i++) {
+    function claimRewardsAllMarkets(address _account) external override returns (bool) {
+        // since this function is called from another contract, a way to be sure it was completed is to return a value, read by the caller contract
+        for (uint256 i = 0; i < marketsCounter; i++) {
             claimHistoricalRewardSingleMarketTrA(i, _account);
             claimRewardSingleMarketTrA(i, availableMarketsRewards[i].trADistributionCounter, _account);
             claimHistoricalRewardSingleMarketTrB(i, _account);
             claimRewardSingleMarketTrB(i, availableMarketsRewards[i].trBDistributionCounter, _account);
         }
+        return true;
     }
 
     /**
