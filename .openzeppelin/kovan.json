@@ -59,6 +59,11 @@
       "address": "0x558c396973B7adD79E1707ab4D9f9b59e0C5CF3C",
       "txHash": "0x1e2eed665cd8e45681589d8c00889db239327a18ee1370baa56b463de192fc09",
       "kind": "transparent"
+    },
+    {
+      "address": "0x0C086a1ca82842A8Bb2887F4EB8B4c494E62926a",
+      "txHash": "0x62e4bd1326a8a440c29884ee46fb26466c2b3f6aa88abd15d2f97c322ee9c56a",
+      "kind": "transparent"
     }
   ],
   "impls": {
@@ -1626,6 +1631,261 @@
             "label": "mapping(uint256 => struct IncentivesControllerStorage.RewardsInfo)"
           },
           "t_struct(RewardsInfo)4190_storage": {
+            "label": "struct IncentivesControllerStorage.RewardsInfo",
+            "members": [
+              {
+                "label": "periodFinish",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardRate",
+                "type": "t_uint256"
+              },
+              {
+                "label": "lastUpdateTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardPerTokenStored",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardsDuration",
+                "type": "t_uint256"
+              },
+              {
+                "label": "finalTotalSupply",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))": {
+            "label": "mapping(uint256 => mapping(uint256 => mapping(address => uint256)))"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(uint256 => mapping(address => uint256))"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "e8ba34dde1408f6ed0049139b94db7412a07f9aae5f33055cbf119ccf0b5690b": {
+      "address": "0xd268244922a4067330a4EfEa624A08C45528f8FB",
+      "txHash": "0xea2c6c2a0a7c1c798d0e52460665e51113a4b136d3f69c3cee19b5da14e8dea9",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:25"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:30"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:20"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "marketsCounter",
+            "type": "t_uint256",
+            "src": "IncentivesControllerStorage.sol:43"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "rewardsTokenAddress",
+            "type": "t_address",
+            "src": "IncentivesControllerStorage.sol:45"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "mktHelperAddress",
+            "type": "t_address",
+            "src": "IncentivesControllerStorage.sol:46"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "priceHelperAddress",
+            "type": "t_address",
+            "src": "IncentivesControllerStorage.sol:47"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "availableMarkets",
+            "type": "t_mapping(t_uint256,t_struct(Market)4166_storage)",
+            "src": "IncentivesControllerStorage.sol:49"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "availableMarketsRewards",
+            "type": "t_mapping(t_uint256,t_struct(MarketRewards)4181_storage)",
+            "src": "IncentivesControllerStorage.sol:50"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trancheARewardsInfo",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(RewardsInfo)4194_storage))",
+            "src": "IncentivesControllerStorage.sol:53"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trancheBRewardsInfo",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(RewardsInfo)4194_storage))",
+            "src": "IncentivesControllerStorage.sol:54"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "userRewardPerTokenTrAPaid",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:56"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "userRewardPerTokenTrBPaid",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:57"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trARewards",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:59"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trBRewards",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:60"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:37"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:67"
+          }
+        ],
+        "types": {
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_uint256,t_struct(Market)4166_storage)": {
+            "label": "mapping(uint256 => struct IncentivesControllerStorage.Market)"
+          },
+          "t_struct(Market)4166_storage": {
+            "label": "struct IncentivesControllerStorage.Market",
+            "members": [
+              {
+                "label": "protocol",
+                "type": "t_address"
+              },
+              {
+                "label": "aTranche",
+                "type": "t_address"
+              },
+              {
+                "label": "bTranche",
+                "type": "t_address"
+              },
+              {
+                "label": "protocolTrNumber",
+                "type": "t_uint256"
+              },
+              {
+                "label": "balanceFactor",
+                "type": "t_uint256"
+              },
+              {
+                "label": "extProtocolPercentage",
+                "type": "t_uint256"
+              },
+              {
+                "label": "enabled",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_struct(MarketRewards)4181_storage)": {
+            "label": "mapping(uint256 => struct IncentivesControllerStorage.MarketRewards)"
+          },
+          "t_struct(MarketRewards)4181_storage": {
+            "label": "struct IncentivesControllerStorage.MarketRewards",
+            "members": [
+              {
+                "label": "underlyingPrice",
+                "type": "t_uint256"
+              },
+              {
+                "label": "underlyingDecimals",
+                "type": "t_uint256"
+              },
+              {
+                "label": "marketRewardsPercentage",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trancheARewardsAmount",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trancheBRewardsAmount",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trADistributionCounter",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trBDistributionCounter",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(RewardsInfo)4194_storage))": {
+            "label": "mapping(uint256 => mapping(uint256 => struct IncentivesControllerStorage.RewardsInfo))"
+          },
+          "t_mapping(t_uint256,t_struct(RewardsInfo)4194_storage)": {
+            "label": "mapping(uint256 => struct IncentivesControllerStorage.RewardsInfo)"
+          },
+          "t_struct(RewardsInfo)4194_storage": {
             "label": "struct IncentivesControllerStorage.RewardsInfo",
             "members": [
               {
