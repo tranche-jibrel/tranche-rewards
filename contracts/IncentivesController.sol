@@ -257,13 +257,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         }
         return totalPercentage;
     }
-
+/*
     /**
      * @dev return total values locked in market Tranche A
      * @param _idxMarket market index
      * @return mktTrATVL market tranche A total value locked 
      */
-    function getMarketTrancheATVL(uint256 _idxMarket) public view returns (uint256 mktTrATVL) {
+/*    function getMarketTrancheATVL(uint256 _idxMarket) public view returns (uint256 mktTrATVL) {
         address _protocol = availableMarkets[_idxMarket].protocol;
         uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
         // if (_useChainlink)
@@ -279,7 +279,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @return mktTrBTVL market tranche B total value locked 
      */
-    function getMarketTrancheBTVL(uint256 _idxMarket) public view returns (uint256 mktTrBTVL) {
+/*    function getMarketTrancheBTVL(uint256 _idxMarket) public view returns (uint256 mktTrBTVL) {
         address _protocol = availableMarkets[_idxMarket].protocol;
         uint256 _trNum = availableMarkets[_idxMarket].protocolTrNumber;
         // if (_useChainlink)
@@ -289,7 +289,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         mktTrBTVL = IMarketHelper(mktHelperAddress).getTrancheBMarketTVL(_protocol, _trNum, _underPrice, _underDecs);
         return mktTrBTVL;
     }
-
+*/
     /**
      * @dev return total values locked in all available and enabled markets
      * @return markets total value locked 
@@ -985,12 +985,24 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      */
     function claimRewardsAllMarkets(address _account) external override returns (bool) {
         // since this function is called from another contract, a way to be sure it was completed is to return a value, read by the caller contract
+        uint256 totRewards;
+        uint256 tmpRew;
         for (uint256 i = 0; i < marketsCounter; i++) {
-            claimHistoricalRewardSingleMarketTrA(i, _account);
-            claimRewardSingleMarketTrA(i, availableMarketsRewards[i].trADistributionCounter, _account);
-            claimHistoricalRewardSingleMarketTrB(i, _account);
-            claimRewardSingleMarketTrB(i, availableMarketsRewards[i].trBDistributionCounter, _account);
+            tmpRew = claimHistoricalRewardSingleMarketTrA(i, _account);
+            totRewards = totRewards.add(tmpRew);
+            tmpRew = claimRewardSingleMarketTrA(i, availableMarketsRewards[i].trADistributionCounter, _account);
+            totRewards = totRewards.add(tmpRew);
+            tmpRew = claimHistoricalRewardSingleMarketTrB(i, _account);
+            totRewards = totRewards.add(tmpRew);
+            tmpRew = claimRewardSingleMarketTrB(i, availableMarketsRewards[i].trBDistributionCounter, _account);
+            totRewards = totRewards.add(tmpRew);
         }
+
+        if (totRewards > 0) {
+            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, totRewards);
+            emit RewardPaid(_account, totRewards);
+        }
+
         return true;
     }
 
@@ -1000,14 +1012,16 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxDistrib distribution index
      * @param _account claimer address
      */
-    function claimRewardSingleMarketTrA(uint256 _idxMarket, uint256 _idxDistrib, address _account) public override nonReentrant {
+    function claimRewardSingleMarketTrA(uint256 _idxMarket, uint256 _idxDistrib, address _account) public nonReentrant returns (uint256) {
         updateRewardsPerMarketTrancheA(_idxMarket, _account, _idxDistrib);
         uint256 reward = trARewards[_idxMarket][_idxDistrib][_account];
-        if (reward > 0) {
-            trARewards[_idxMarket][_idxDistrib][_account] = 0;
-            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, reward);
-            emit RewardPaid(_account, reward);
-        }
+        trARewards[_idxMarket][_idxDistrib][_account] = 0;
+        return reward;
+        // if (reward > 0) {
+        //     trARewards[_idxMarket][_idxDistrib][_account] = 0;
+        //     SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, reward);
+        //     emit RewardPaid(_account, reward);
+        // }
     }
 
     /**
@@ -1016,14 +1030,16 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxDistrib distribution index
      * @param _account claimer address
      */
-    function claimRewardSingleMarketTrB(uint256 _idxMarket, uint256 _idxDistrib, address _account) public override nonReentrant {
+    function claimRewardSingleMarketTrB(uint256 _idxMarket, uint256 _idxDistrib, address _account) public nonReentrant returns(uint256) {
         updateRewardsPerMarketTrancheB(_idxMarket, _account, _idxDistrib);
         uint256 reward = trBRewards[_idxMarket][_idxDistrib][_account];
-        if (reward > 0) {
-            trBRewards[_idxMarket][_idxDistrib][_account] = 0;
-            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, reward);
-            emit RewardPaid(_account, reward);
-        }
+        trBRewards[_idxMarket][_idxDistrib][_account] = 0;
+        return reward;
+        // if (reward > 0) {
+        //     trBRewards[_idxMarket][_idxDistrib][_account] = 0;
+        //     SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, reward);
+        //     emit RewardPaid(_account, reward);
+        // }
     }
 
     /**
@@ -1031,7 +1047,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @param _account claimer address
      */
-    function claimHistoricalRewardSingleMarketTrA(uint256 _idxMarket, address _account) public nonReentrant {
+    function claimHistoricalRewardSingleMarketTrA(uint256 _idxMarket, address _account) public nonReentrant returns(uint256) {
         uint256 _idxDistrib = availableMarketsRewards[_idxMarket].trADistributionCounter;
         uint256 protTrNum = availableMarkets[_idxMarket].protocolTrNumber;
         uint256 callerCounter = 
@@ -1053,10 +1069,11 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
                 }
             }
         }
-        if (pastRewards > 0) {
-            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, pastRewards);
-            emit PastRewardsPaidTrancheA(_idxMarket, _account, pastRewards);
-        }
+        return pastRewards;
+        // if (pastRewards > 0) {
+        //     SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, pastRewards);
+        //     emit PastRewardsPaidTrancheA(_idxMarket, _account, pastRewards);
+        // }
     }
 
     /**
@@ -1064,7 +1081,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @param _account account address
      */
-    function claimHistoricalRewardSingleMarketTrB(uint256 _idxMarket, address _account) public nonReentrant {
+    function claimHistoricalRewardSingleMarketTrB(uint256 _idxMarket, address _account) public nonReentrant returns(uint256) {
         uint256 _idxDistrib = availableMarketsRewards[_idxMarket].trBDistributionCounter;
         uint256 protTrNum = availableMarkets[_idxMarket].protocolTrNumber;
         uint256 callerCounter = 
@@ -1086,10 +1103,11 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
                 }
             }
         }
-        if (pastRewards > 0) {
-            SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, pastRewards);
-            emit PastRewardsPaidTrancheB(_idxMarket, _account, pastRewards);
-        }
+        return pastRewards;
+        // if (pastRewards > 0) {
+        //     SafeERC20Upgradeable.safeTransfer(IERC20Upgradeable(rewardsTokenAddress), _account, pastRewards);
+        //     emit PastRewardsPaidTrancheB(_idxMarket, _account, pastRewards);
+        // }
     }
     
     /**
