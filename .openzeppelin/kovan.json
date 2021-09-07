@@ -2183,6 +2183,261 @@
           }
         }
       }
+    },
+    "a60fc66e66f0e874d78c50bf5102377e30340f982b70b43e48f336a143598924": {
+      "address": "0x8Bc065F6194E49fe131099B020788A2a1EfF231f",
+      "txHash": "0x33af7e8be29f84a0b3de0bc1136413b41bc91661d5f07a514ac64f5ce22ec7b4",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:25"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:30"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:20"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:74"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "marketsCounter",
+            "type": "t_uint256",
+            "src": "IncentivesControllerStorage.sol:43"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "rewardsTokenAddress",
+            "type": "t_address",
+            "src": "IncentivesControllerStorage.sol:45"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "mktHelperAddress",
+            "type": "t_address",
+            "src": "IncentivesControllerStorage.sol:46"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "priceHelperAddress",
+            "type": "t_address",
+            "src": "IncentivesControllerStorage.sol:47"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "availableMarkets",
+            "type": "t_mapping(t_uint256,t_struct(Market)4352_storage)",
+            "src": "IncentivesControllerStorage.sol:49"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "availableMarketsRewards",
+            "type": "t_mapping(t_uint256,t_struct(MarketRewards)4367_storage)",
+            "src": "IncentivesControllerStorage.sol:50"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trancheARewardsInfo",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(RewardsInfo)4380_storage))",
+            "src": "IncentivesControllerStorage.sol:53"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trancheBRewardsInfo",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(RewardsInfo)4380_storage))",
+            "src": "IncentivesControllerStorage.sol:54"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "userRewardPerTokenTrAPaid",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:56"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "userRewardPerTokenTrBPaid",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:57"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trARewards",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:59"
+          },
+          {
+            "contract": "IncentivesControllerStorage",
+            "label": "trBRewards",
+            "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))",
+            "src": "IncentivesControllerStorage.sol:60"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:37"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:67"
+          }
+        ],
+        "types": {
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_mapping(t_uint256,t_struct(Market)4352_storage)": {
+            "label": "mapping(uint256 => struct IncentivesControllerStorage.Market)"
+          },
+          "t_struct(Market)4352_storage": {
+            "label": "struct IncentivesControllerStorage.Market",
+            "members": [
+              {
+                "label": "protocol",
+                "type": "t_address"
+              },
+              {
+                "label": "aTranche",
+                "type": "t_address"
+              },
+              {
+                "label": "bTranche",
+                "type": "t_address"
+              },
+              {
+                "label": "protocolTrNumber",
+                "type": "t_uint256"
+              },
+              {
+                "label": "balanceFactor",
+                "type": "t_uint256"
+              },
+              {
+                "label": "extProtocolPercentage",
+                "type": "t_uint256"
+              },
+              {
+                "label": "enabled",
+                "type": "t_bool"
+              }
+            ]
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_mapping(t_uint256,t_struct(MarketRewards)4367_storage)": {
+            "label": "mapping(uint256 => struct IncentivesControllerStorage.MarketRewards)"
+          },
+          "t_struct(MarketRewards)4367_storage": {
+            "label": "struct IncentivesControllerStorage.MarketRewards",
+            "members": [
+              {
+                "label": "underlyingPrice",
+                "type": "t_uint256"
+              },
+              {
+                "label": "underlyingDecimals",
+                "type": "t_uint256"
+              },
+              {
+                "label": "marketRewardsPercentage",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trancheARewardsAmount",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trancheBRewardsAmount",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trADistributionCounter",
+                "type": "t_uint256"
+              },
+              {
+                "label": "trBDistributionCounter",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(RewardsInfo)4380_storage))": {
+            "label": "mapping(uint256 => mapping(uint256 => struct IncentivesControllerStorage.RewardsInfo))"
+          },
+          "t_mapping(t_uint256,t_struct(RewardsInfo)4380_storage)": {
+            "label": "mapping(uint256 => struct IncentivesControllerStorage.RewardsInfo)"
+          },
+          "t_struct(RewardsInfo)4380_storage": {
+            "label": "struct IncentivesControllerStorage.RewardsInfo",
+            "members": [
+              {
+                "label": "periodFinish",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardRate",
+                "type": "t_uint256"
+              },
+              {
+                "label": "lastUpdateTime",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardPerTokenStored",
+                "type": "t_uint256"
+              },
+              {
+                "label": "rewardsDuration",
+                "type": "t_uint256"
+              },
+              {
+                "label": "finalTotalSupply",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_mapping(t_uint256,t_mapping(t_uint256,t_mapping(t_address,t_uint256)))": {
+            "label": "mapping(uint256 => mapping(uint256 => mapping(address => uint256)))"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(uint256 => mapping(address => uint256))"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
     }
   }
 }
