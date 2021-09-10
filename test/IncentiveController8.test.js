@@ -148,10 +148,10 @@ contract('Incentive Controller', function (accounts) {
             await incentiveControllerContract.trancheBNewEnter(user1, trBFDTContract0.address)
             await trBFDTContract0.mint(user1, ether("500"));
             await protocolContract.setTrBStakingDetails(user1, 0, now, ether("500"), 1)
+            expect((await protocolContract.getSingleTrancheUserStakeCounterTrB(user1, 0)).toString()).to.be.equal("1")
             bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user1))
             expect(bal).to.be.equal("500")
             
-
             totASupply = await trAFDTContract0.totalSupply();
             // console.log(web3.utils.fromWei(totASupply))
             trAVal = totASupply * MY_TRANCHE_A_PRICE_NUM0 / Math.pow(10, 18);
@@ -159,6 +159,39 @@ contract('Incentive Controller', function (accounts) {
             // console.log(totASupply * MY_TRANCHE_A_PRICE_NUM)
             await protocolContract.setTrAValue(0, ether(trAVal.toString()));
             await protocolContract.setTrBValue(0, ether('500'));
+            await protocolContract.setTotalValue(0);
+            trATVL = await protocolContract.getTrAValue(0);
+            trBTVL = await protocolContract.getTrBValue(0);
+            totTrTVL = await protocolContract.getTotalValue(0);
+            console.log("trATVL: " + web3.utils.fromWei(trATVL, "ether") + ", trBTVL: " +
+                web3.utils.fromWei(trBTVL, "ether") + ", totTVL: " + web3.utils.fromWei(totTrTVL, "ether"));
+        });
+
+        it('set some other user tokens and tranche in rewards distribution contract', async function () {
+            let block = await web3.eth.getBlockNumber();
+            now = (await web3.eth.getBlock(block)).timestamp
+
+            await incentiveControllerContract.trancheANewEnter(user1, trAFDTContract0.address)
+            await trAFDTContract0.mint(user1, ether("10000"));
+            await protocolContract.setTrAStakingDetails(user1, 0, now, ether("10000"), 2)
+            expect((await protocolContract.getSingleTrancheUserStakeCounterTrA(user1, 0)).toString()).to.be.equal("2")
+            bal = web3.utils.fromWei(await trAFDTContract0.balanceOf(user1))
+            expect(bal).to.be.equal("20000")
+
+            await incentiveControllerContract.trancheBNewEnter(user1, trBFDTContract0.address)
+            await trBFDTContract0.mint(user1, ether("500"));
+            await protocolContract.setTrBStakingDetails(user1, 0, now, ether("500"), 2)
+            expect((await protocolContract.getSingleTrancheUserStakeCounterTrB(user1, 0)).toString()).to.be.equal("2")
+            bal = web3.utils.fromWei(await trBFDTContract0.balanceOf(user1))
+            expect(bal).to.be.equal("1000")
+            
+            totASupply = await trAFDTContract0.totalSupply();
+            // console.log(web3.utils.fromWei(totASupply))
+            trAVal = totASupply * MY_TRANCHE_A_PRICE_NUM0 / Math.pow(10, 18);
+            // console.log(trAVal.toString())
+            // console.log(totASupply * MY_TRANCHE_A_PRICE_NUM)
+            await protocolContract.setTrAValue(0, ether(trAVal.toString()));
+            await protocolContract.setTrBValue(0, ether('1000'));
             await protocolContract.setTotalValue(0);
             trATVL = await protocolContract.getTrAValue(0);
             trBTVL = await protocolContract.getTrBValue(0);
