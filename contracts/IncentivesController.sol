@@ -513,7 +513,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             uint256 _underlyingDecs,
             uint256 _underlyingPrice,
             address _chainAggrInterface,
-            bool _reciprocPrice) external onlyOwner{
+            bool _reciprocPrice) external nonReentrant onlyOwner{
         require(_balFactor <= uint256(1e18), "IncentiveController: balance factor too high");
         require(_marketPercentage <= uint256(1e18), "IncentiveController: market percentage too high");
         // require(_rewardsDuration > 0, "IncentiveController: rewards duration cannot be zero");
@@ -742,7 +742,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _totalAmount total max rewards amount
      * @param _rewardsDuration rewards duration (in seconds)
      */
-    function updateRewardAmountsAllMarkets(uint256 _totalAmount, uint256 _rewardsDuration) external onlyOwner {
+    function updateRewardAmountsAllMarkets(uint256 _totalAmount, uint256 _rewardsDuration) external nonReentrant onlyOwner {
         require(marketsCounter > 0, 'IncentiveController: no markets');
         require(_totalAmount > 0, "IncentiveController: _totalAmount has to be greater than zero ");
         require(_rewardsDuration > 0, "IncentiveController: _rewardsDuration has to be greater than zero ");
@@ -1005,9 +1005,6 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      */
     function claimHistoricalRewardSingleMarketTrB(uint256 _idxMarket, address _account) public nonReentrant returns(uint256) {
         uint256 _idxDistrib = availableMarketsRewards[_idxMarket].trBDistributionCounter;
-        uint256 protTrNum = availableMarkets[_idxMarket].protocolTrNumber;
-        uint256 callerCounter = 
-            IProtocol(availableMarkets[_idxMarket].protocol).getSingleTrancheUserStakeCounterTrB(_account, protTrNum);
         uint256 pastRewards;
 
         if (_idxDistrib > 1) {
