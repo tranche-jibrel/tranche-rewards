@@ -75,12 +75,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
     */
     function rewardPerTrAToken(uint256 _idxMarket, uint256 _idxDistrib) public view returns (uint256) {
         uint256 _totalSupply;
+        address aTranche = availableMarkets[_idxMarket].aTranche;
         if (_idxDistrib == availableMarketsRewards[_idxMarket].trADistributionCounter && 
                 block.timestamp <= trancheARewardsInfo[_idxMarket][_idxDistrib].periodFinish) {
-            _totalSupply = IERC20Upgradeable(availableMarkets[_idxMarket].aTranche).totalSupply();
+            _totalSupply = IERC20Upgradeable(aTranche).totalSupply();
         } else {
             if (trancheARewardsInfo[_idxMarket][_idxDistrib].finalTotalSupply == 0) {
-                _totalSupply = IERC20Upgradeable(availableMarkets[_idxMarket].aTranche).totalSupply();
+                _totalSupply = IERC20Upgradeable(aTranche).totalSupply();
             } else
                 _totalSupply = trancheARewardsInfo[_idxMarket][_idxDistrib].finalTotalSupply;
         }
@@ -102,12 +103,13 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      */
     function rewardPerTrBToken(uint256 _idxMarket, uint256 _idxDistrib) public view returns (uint256) {
         uint256 _totalSupply;
+        address bTranche = availableMarkets[_idxMarket].bTranche;
         if (_idxDistrib == availableMarketsRewards[_idxMarket].trBDistributionCounter && 
                 block.timestamp <= trancheBRewardsInfo[_idxMarket][_idxDistrib].periodFinish) {
-            _totalSupply = IERC20Upgradeable(availableMarkets[_idxMarket].bTranche).totalSupply();
+            _totalSupply = IERC20Upgradeable(bTranche).totalSupply();
         } else {
             if (trancheBRewardsInfo[_idxMarket][_idxDistrib].finalTotalSupply == 0) {
-                _totalSupply = IERC20Upgradeable(availableMarkets[_idxMarket].bTranche).totalSupply();
+                _totalSupply = IERC20Upgradeable(bTranche).totalSupply();
             } else 
                 _totalSupply = trancheBRewardsInfo[_idxMarket][_idxDistrib].finalTotalSupply;
         }
@@ -191,13 +193,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         }
             
         uint256 rewPerTokenA = rewardPerTrAToken(_idxMarket, _idxDistrib);
-        // uint256 rewPerTokenA = trancheARewardsInfo[_idxMarket][_idxDistrib].rewardPerTokenStored;
         uint256 userRewPerTokenPaidA = userRewardPerTokenTrAPaid[_idxMarket][_idxDistrib][_account];
-        // if (rewPerTokenA >= userRewPerTokenPaidA) {
-            return userBal.mul(rewPerTokenA.sub(userRewPerTokenPaidA)).div(1e18).add(trARewards[_idxMarket][_idxDistrib][_account]); 
-        // } else {
-        //     return trARewards[_idxMarket][_idxDistrib][_account];
-        // }    
+        return userBal.mul(rewPerTokenA.sub(userRewPerTokenPaidA)).div(1e18).add(trARewards[_idxMarket][_idxDistrib][_account]);   
     }
 
     /**
@@ -218,13 +215,8 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
         }
 
         uint256 rewPerTokenB = rewardPerTrBToken(_idxMarket, _idxDistrib);
-        // uint256 rewPerTokenB = trancheBRewardsInfo[_idxMarket][_idxDistrib].rewardPerTokenStored;
         uint256 userRewPerTokenPaidB = userRewardPerTokenTrBPaid[_idxMarket][_idxDistrib][_account];
-        // if (rewPerTokenB >= userRewPerTokenPaidB) {
-            return userBal.mul(rewPerTokenB.sub(userRewPerTokenPaidB)).div(1e18).add(trBRewards[_idxMarket][_idxDistrib][_account]);  
-        // } else {
-        //     return trBRewards[_idxMarket][_idxDistrib][_account];
-        // }     
+        return userBal.mul(rewPerTokenB.sub(userRewPerTokenPaidB)).div(1e18).add(trBRewards[_idxMarket][_idxDistrib][_account]);    
     }
 
     /**
@@ -340,7 +332,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @param _account claimer address
      */
-    function getHistoricalUnclaimedRewardsAmountTrA(uint256 _idxMarket, address _account) public view returns(uint256) {
+    function getHistoricalUnclaimedRewardsAmountTrA(uint256 _idxMarket, address _account) external view returns(uint256) {
         uint256 _idxDistrib = availableMarketsRewards[_idxMarket].trADistributionCounter;
         uint256 pastRewards;
 
@@ -431,7 +423,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
      * @param _idxMarket market index
      * @param _account claimer address
      */
-    function getHistoricalUnclaimedRewardsAmountTrB(uint256 _idxMarket, address _account) public view returns(uint256) {
+    function getHistoricalUnclaimedRewardsAmountTrB(uint256 _idxMarket, address _account) external view returns(uint256) {
         uint256 _idxDistrib = availableMarketsRewards[_idxMarket].trBDistributionCounter;
         uint256 pastRewards;
 
@@ -509,14 +501,12 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             uint256 _balFactor,
             uint256 _marketPercentage,
             uint256 _extProtReturn,
-            // uint256 _rewardsDuration,
             uint256 _underlyingDecs,
             uint256 _underlyingPrice,
             address _chainAggrInterface,
             bool _reciprocPrice) external nonReentrant onlyOwner{
         require(_balFactor <= uint256(1e18), "IncentiveController: balance factor too high");
         require(_marketPercentage <= uint256(1e18), "IncentiveController: market percentage too high");
-        // require(_rewardsDuration > 0, "IncentiveController: rewards duration cannot be zero");
         availableMarkets[marketsCounter].protocol = _protocol;
         availableMarkets[marketsCounter].protocolTrNumber = _protocolTrNumber;
         ( , , address trAAddress, address trBAddress) = IProtocol(_protocol).trancheAddresses(_protocolTrNumber);
@@ -786,15 +776,15 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
             availableMarketsRewards[_idxMarket].trancheBRewardsAmount = trBAmount;
             notifyRewardAmountTrancheB(_idxMarket, trBAmount, _rewardsDuration);
 
-            uint256 _idxDistrib = availableMarketsRewards[_idxMarket].trADistributionCounter;
+            uint256 idxDistrib = availableMarketsRewards[_idxMarket].trADistributionCounter;
 
             if (_idxDistrib != prevIdxCount) {
-                trancheARewardsInfo[_idxMarket][_idxDistrib].rewardPerTokenStored = 0;
-                trancheBRewardsInfo[_idxMarket][_idxDistrib].rewardPerTokenStored = 0;
+                trancheARewardsInfo[_idxMarket][idxDistrib].rewardPerTokenStored = 0;
+                trancheBRewardsInfo[_idxMarket][idxDistrib].rewardPerTokenStored = 0;
             }
 
-            trancheARewardsInfo[_idxMarket][_idxDistrib].rewardsDuration = _rewardsDuration;
-            trancheBRewardsInfo[_idxMarket][_idxDistrib].rewardsDuration = _rewardsDuration;
+            trancheARewardsInfo[_idxMarket][idxDistrib].rewardsDuration = _rewardsDuration;
+            trancheBRewardsInfo[_idxMarket][idxDistrib].rewardsDuration = _rewardsDuration;
 
             emit FundsDistributed(_idxMarket, trAAmount, trBAmount, block.timestamp);
         }
