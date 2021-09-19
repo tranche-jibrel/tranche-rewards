@@ -126,7 +126,7 @@ Tests on Price Helper contract is around 96%.
     <tbody>
         <tr>
             <td>IncentivesController</td>
-            <td><code>23.26</code></td>
+            <td><code>21.15</code></td>
             <td>Contract for incentive rewards (implementation), distributing rewards on Tranche tokens holders</td>
         </tr>
         <tr>
