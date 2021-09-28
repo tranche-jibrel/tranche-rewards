@@ -30,7 +30,7 @@ module.exports = {
         ),
       network_id: 1,
       gas: 5500000,
-      gasPrice: 161000000000,
+      gasPrice: 60000000000,
       timeoutBlocks: 200,
       confirmations: 2,
       skipDryRun: true
