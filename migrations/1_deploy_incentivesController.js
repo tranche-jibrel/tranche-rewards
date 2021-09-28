@@ -246,7 +246,7 @@ module.exports = async (deployer, network, accounts) => {
       1, // TrancheNumber
       web3.utils.toWei('0.5'),  // 50% balance factor
       web3.utils.toWei('1'), // 100% tranche percentage
-      web3.utils.toWei('0.0431'), // 4.31% external protocol return
+      web3.utils.toWei('0.0432'), // 4.32% external protocol return
       6,
       0, // underlying price
       MARKET_2_CHAIN_ADDRESS,
@@ -260,7 +260,7 @@ module.exports = async (deployer, network, accounts) => {
       2, // TrancheNumber
       web3.utils.toWei('0.5'),  // 50% balance factor
       web3.utils.toWei('1'), // 100% tranche percentage
-      web3.utils.toWei('0.0036'), // 0.36% external protocol return
+      web3.utils.toWei('0.0033'), // 0.33% external protocol return
       8,
       0, // underlying price
       MARKET_2_CHAIN_ADDRESS,
@@ -274,7 +274,7 @@ module.exports = async (deployer, network, accounts) => {
       3, // TrancheNumber
       web3.utils.toWei('0.5'),  // 50% balance factor
       web3.utils.toWei('1'), // 100% tranche percentage
-      web3.utils.toWei('0.0050'), // 0.50% external protocol return
+      web3.utils.toWei('0.0048'), // 0.48% external protocol return
       18,
       0, // underlying price
       MARKET_2_CHAIN_ADDRESS,
