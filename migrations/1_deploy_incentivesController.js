@@ -204,53 +204,82 @@ module.exports = async (deployer, network, accounts) => {
       let sliceInstance = await RewardToken.at(SLICE_ADDRESS);
       await sliceInstance.approve(SIRInstance.address, web3.utils.toWei('3000'));
     }
-    } else if (network == "mainnet") {
-      const { SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS } = process.env;
-      console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS)
-      const tokenOwner = accounts[0];
-      const marketHelper = await deployProxy(MarketHelper, [], {
-        from: tokenOwner
-      });
-      console.log('MARKET_HELPER_ADDRESS=' + marketHelper.address);
+  } else if (network == "mainnet") {
+    const { SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS, MARKET_3_CHAIN_ADDRESS, MARKET_4_CHAIN_ADDRESS } = process.env;
+    console.log(SLICE_ADDRESS, PROTOCOL_ADDRESS, MARKET_1_CHAIN_ADDRESS, MARKET_2_CHAIN_ADDRESS, MARKET_3_CHAIN_ADDRESS, MARKET_4_CHAIN_ADDRESS)
+    const tokenOwner = accounts[0];
+    const marketHelper = await deployProxy(MarketHelper, [], {
+      from: tokenOwner
+    });
+    console.log('MARKET_HELPER_ADDRESS=' + marketHelper.address);
 
-      const priceHelper = await deployProxy(PriceHelper, [], {
-        from: tokenOwner
-      });
-      console.log('PRICE_HELPER_ADDRESS=' + priceHelper.address);
+    const priceHelper = await deployProxy(PriceHelper, [], {
+      from: tokenOwner
+    });
+    console.log('PRICE_HELPER_ADDRESS=' + priceHelper.address);
 
-      const SIRInstance = await deployProxy(IncentivesController, [SLICE_ADDRESS, marketHelper.address, priceHelper.address], {
-        from: tokenOwner
-      });
-      console.log('SIR_ADDRESS=' + SIRInstance.address);
-      await priceHelper.setControllerAddress(SIRInstance.address, { from: tokenOwner })
-      console.log('control in adding first tranche')
-      await SIRInstance.addTrancheMarket(
-        PROTOCOL_ADDRESS,
-        0, // TrancheNumber
-        web3.utils.toWei('0.5'),  // 50% balance factor
-        web3.utils.toWei('1'), // 100% tranche percentage
-        web3.utils.toWei('0.03'), // 3% external protocol return
-        18,
-        0, // underlying price
-        MARKET_1_CHAIN_ADDRESS,
-        false,
-        { from: tokenOwner });
-      console.log('control in adding second tranche')
-      await SIRInstance.addTrancheMarket(
-        PROTOCOL_ADDRESS,
-        1, // TrancheNumber
-        web3.utils.toWei('0.5'),  // 50% balance factor
-        web3.utils.toWei('1'), // 100% tranche percentage
-        web3.utils.toWei('0.03'), // 3% external protocol return
-        6,
-        0, // underlying price
-        MARKET_2_CHAIN_ADDRESS,
-        false,
-        { from: tokenOwner });
-      console.log('refresh slice speed')
-      await SIRInstance.refreshSliceSpeeds();
-      // console.log('approve slice amount');
-      // let sliceInstance = await RewardToken.at(SLICE_ADDRESS);
-      // await sliceInstance.approve(SIRInstance.address, web3.utils.toWei('3000'));
-    }
+    const SIRInstance = await deployProxy(IncentivesController, [SLICE_ADDRESS, marketHelper.address, priceHelper.address], {
+      from: tokenOwner
+    });
+    console.log('SIR_ADDRESS=' + SIRInstance.address);
+
+    await priceHelper.setControllerAddress(SIRInstance.address, { from: tokenOwner })
+    console.log('control in adding first tranche')
+
+    // DAI Tranche
+    await SIRInstance.addTrancheMarket(
+      PROTOCOL_ADDRESS,
+      0, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.0277'), // 2.7% external protocol return
+      18,
+      0, // underlying price
+      MARKET_1_CHAIN_ADDRESS,
+      false,
+      { from: tokenOwner });
+    console.log('control in adding second tranche')
+
+    // USDC Tranche
+    await SIRInstance.addTrancheMarket(
+      PROTOCOL_ADDRESS,
+      1, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.0431'), // 4.31% external protocol return
+      6,
+      0, // underlying price
+      MARKET_2_CHAIN_ADDRESS,
+      false,
+      { from: tokenOwner });
+
+    console.log('control in adding third tranche')
+    // WBTC Tranche
+    await SIRInstance.addTrancheMarket(
+      PROTOCOL_ADDRESS,
+      2, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.0036'), // 0.36% external protocol return
+      8,
+      0, // underlying price
+      MARKET_2_CHAIN_ADDRESS,
+      false,
+      { from: tokenOwner });
+
+    console.log('control in adding fourth tranche')
+    // LINK Tranche
+    await SIRInstance.addTrancheMarket(
+      PROTOCOL_ADDRESS,
+      3, // TrancheNumber
+      web3.utils.toWei('0.5'),  // 50% balance factor
+      web3.utils.toWei('1'), // 100% tranche percentage
+      web3.utils.toWei('0.0050'), // 0.50% external protocol return
+      18,
+      0, // underlying price
+      MARKET_2_CHAIN_ADDRESS,
+      false,
+      { from: tokenOwner });
+
+  }
 }

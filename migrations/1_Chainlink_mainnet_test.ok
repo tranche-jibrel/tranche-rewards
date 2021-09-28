@@ -1,0 +1,54 @@
+require('dotenv').config();
+const {
+  deployProxy,
+  upgradeProxy
+} = require('@openzeppelin/truffle-upgrades');
+const {
+  BN,
+  ether
+} = require('@openzeppelin/test-helpers');
+
+const Web3 = require('web3');
+// Ganache UI on 8545
+const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+
+var MarketHelper = artifacts.require("./MarketHelper.sol");
+var PriceHelper = artifacts.require("./PriceHelper.sol");
+var IncentivesController = artifacts.require("./IncentivesController.sol");
+
+const SLICE_ADDRESS = '0x0aee8703d34dd9ae107386d3eff22ae75dd616d1';
+
+module.exports = async (deployer, network, accounts) => {
+
+  if (network == "development") {
+    const tokenOwner = accounts[0];
+    console.log('tokenOwner: ' + tokenOwner);
+
+    const myPriceHelperInst = await deployProxy(PriceHelper, [], {
+      from: tokenOwner
+    });
+    console.log('myPriceHelper Deployed: ', myPriceHelperInst.address);
+
+    const myMktHelperinstance = await deployProxy(MarketHelper, [], {
+      from: tokenOwner
+    });
+    console.log('myMktHelperinstance Deployed: ', myMktHelperinstance.address);
+
+    // genesisDate = Date.now() / 1000 | 0
+    // console.log(genesisDate)
+
+    // let block = await web3.eth.getBlockNumber();
+    // console.log("Actual Block: " + block);
+    // genesisDate = (await web3.eth.getBlock(block)).timestamp
+    // console.log(genesisDate)
+
+    const myIncentivesControllerInstance =
+      await deployProxy(IncentivesController, [SLICE_ADDRESS, myMktHelperinstance.address, myPriceHelperInst.address], {
+        from: tokenOwner
+      });
+    console.log('myIncentivesControllerInstance Deployed: ', myIncentivesControllerInstance.address);
+
+    await myPriceHelperInst.setControllerAddress(myIncentivesControllerInstance.address, { from: tokenOwner })
+
+  } 
+}

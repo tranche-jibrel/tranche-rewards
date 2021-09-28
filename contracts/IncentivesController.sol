@@ -778,7 +778,7 @@ contract IncentivesController is OwnableUpgradeable, IncentivesControllerStorage
 
             uint256 idxDistrib = availableMarketsRewards[_idxMarket].trADistributionCounter;
 
-            if (_idxDistrib != prevIdxCount) {
+            if (idxDistrib != prevIdxCount) {
                 trancheARewardsInfo[_idxMarket][idxDistrib].rewardPerTokenStored = 0;
                 trancheBRewardsInfo[_idxMarket][idxDistrib].rewardPerTokenStored = 0;
             }
