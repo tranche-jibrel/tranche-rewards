@@ -263,7 +263,7 @@ module.exports = async (deployer, network, accounts) => {
       web3.utils.toWei('0.0033'), // 0.33% external protocol return
       8,
       0, // underlying price
-      MARKET_2_CHAIN_ADDRESS,
+      MARKET_3_CHAIN_ADDRESS,
       false,
       { from: tokenOwner });
 
@@ -277,7 +277,7 @@ module.exports = async (deployer, network, accounts) => {
       web3.utils.toWei('0.0048'), // 0.48% external protocol return
       18,
       0, // underlying price
-      MARKET_2_CHAIN_ADDRESS,
+      MARKET_4_CHAIN_ADDRESS,
       false,
       { from: tokenOwner });
 
